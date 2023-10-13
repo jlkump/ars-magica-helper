@@ -5,10 +5,6 @@
 #include <vector>
 #include <unordered_map>
 
-// Not sure if the godot namespace is necessary, as
-// this class will not interact with engine functionality
-// directly
-namespace godot {
 
 /*
  * @brief
@@ -108,7 +104,5 @@ public:
     */
     bool set_expression(std::string name, std::string expression);
 };
-
-}
 
 #endif
