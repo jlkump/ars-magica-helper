@@ -1,21 +1,18 @@
-// Graphics Imports
-//#include <glad/glad.h>
-//#include <GLFW/glfw3.h>
-//#include <stb_image.h>
+// GUI Imports
+#include <imgui/imgui.h>
+#include <imgui/backends/imgui_impl_opengl3.h>
+#include <imgui/backends/imgui_impl_win32.h>
+#include <windows.h>
+#include <GL/GL.h>
+#include <tchar.h>
+
+// GLM (Math Library)
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 // Project Imports
 #include <helpers/RootDir.h>
 
-// GUI Imports
-#include <imgui/imgui.h>
-#include <imgui/backends/imgui_impl_opengl3.h>
-#include <imgui/backends/imgui_impl_win32.h>
-
-#include <windows.h>
-#include <GL/GL.h>
-#include <tchar.h>
 
 // Data stored per platform window
 struct WGL_WindowData { HDC hDC; };
