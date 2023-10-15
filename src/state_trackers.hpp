@@ -1,17 +1,20 @@
 #ifndef ARS_STATE_H
 #define ARS_STATE_H
 
+#include <algorithm>
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <stdexcept>
+#include <stack>
+#include <sstream>
+#include <regex>
 
 using namespace std;
 
-
-#define GET_VALUE_DECLARATION friend float GetValue(const State& state, const ValueManager& value_manager, const string& value_name)
-
-
-#define SET_VALUE_DECLARATION 
+class GameState;
+class CharacterState;
+class Expression;
 
 /*
  *		This file will be used to define all the structs and classes necessary to
@@ -38,6 +41,25 @@ public:
 	unordered_map<string, float> state_;
 };
 
+class SyntaxError : public exception {
+public:
+	enum Type {
+		UNBALANCED_PARENTHESES, // Ex:   8 * (1 + 2))
+		INVALID_ORDERED_PARENTHESES, // Ex:   8 * (1 + 2]
+		EMPTY_STATE_VALUE_NAME, // Ex:    8 + []
+		ILLFORMED_EXPRESSION,   // Ex:    sqrt 10
+		INVALID_OPERATION,      // Ex:    nonexistent(2004)
+		INVALID_VARIABLE_NAME,  // Ex:    8 + [(*asjlkaj)]
+	};
+private:
+	string error_;
+	Type type_;
+public:
+	SyntaxError(const string& error, Type t) : error_(error), type_(t) {}
+	virtual const char* what() const noexcept { return error_.c_str();  }
+	SyntaxError::Type GetType() { return type_; }
+};
+
 class Expression {
 private:
 	struct ExpressionNode {
@@ -56,16 +78,31 @@ private:
 			MIN,
 			MAX,
 			TERNERY,
+			INVALID,
 		};
 		union Value {
 			float true_value_;
 			string state_value_;
 			bool bool_value_;
+
+			Value() : true_value_(0.0) {}
+			~Value() {}
 		};
 		Value node_value_;
+	public:
+		ExpressionNode() {};
 	};
 	string name_;
 	ExpressionNode* ast_root_; // Abstract Syntax Tree
+
+	/*
+	* This function checks that an expression string uses valid format and will throw a
+	* SyntaxError if it does not. This will occur if the expression has:
+	* 1. Operations in the invalid form "RoundDown 2.0", where parentheses are missing.
+	* 2. The given operation does not exist, ex: "DoCoolStuff(29)"
+	* 3. The operation is not supported, ex: "1 >> 2", essentially another form of the case above
+	*/
+	static void CheckValidExpressionOperations(const string& expression);
 
 	/*
 	* This will actually parse the expression string given. The current syntax I have in
@@ -203,8 +240,5 @@ public:
 	*/
 	void AddCallbackOnValueChange(const string& value_name, void(*callback_function)(const float));
 };
-
-
-
 
 #endif
