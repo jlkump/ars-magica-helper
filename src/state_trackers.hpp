@@ -95,6 +95,10 @@ private:
 	string name_;
 	ExpressionNode* ast_root_; // Abstract Syntax Tree
 
+	static bool IsValidStringOperation(const string& op);
+
+	static bool IsValidCharOperation(const char op);
+
 	/*
 	* This function checks that an expression string uses valid format and will throw a
 	* SyntaxError if it does not. This will occur if the expression has:

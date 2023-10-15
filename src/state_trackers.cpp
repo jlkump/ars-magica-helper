@@ -7,16 +7,17 @@
 void CheckEvenParentheses(const string& expression) {
 	stack<char> s;
 	for (char cur : expression) {
+		// Ignore chars that are not parentheses
 		if (cur != '[' && cur != ']' && cur != '(' && cur != ')' && cur != '{' && cur != '}') {
-			// Ignore chars that are not parentheses
 			continue;
 		}
 
+		// Put open brackets on the stack
 		if (cur == '[' || cur == '{' || cur == '(') {
 			s.push(cur);
-		}
-		else {
+		} else {
 			if (s.empty()) {
+				// We encountered a closed bracket with no corresponding open bracket.
 				string err = string("Unbalanced parentheses in given expression: \"");
 				err.append(expression);
 				err.append("\"\n");
@@ -24,6 +25,7 @@ void CheckEvenParentheses(const string& expression) {
 			}
 			char open_brace = s.top();
 			if ((open_brace == '[' && cur != ']') || (open_brace == '{' && cur != '}') || (open_brace == '(' && cur != ')')) {
+				// We encountered the wrong pairing of brackets.
 				string err = string("Parentheses are not ordered correctly in expression: \"");
 				err.append(expression);
 				err.append("\"\nExpected a closing brace to \'");
@@ -33,23 +35,40 @@ void CheckEvenParentheses(const string& expression) {
 				err.append("\' instead.\n");
 				throw SyntaxError(err, SyntaxError::Type::INVALID_ORDERED_PARENTHESES);
 			}
+			// If we get here, everything is OK and we can take the opening bracket off the stack.
 			s.pop();
 		}
 	}
-	// If we still have opening parantheses, we need to throw an error
 	if (!s.empty()) {
+		// If we get here, we still have opening brackets that had no closing bracket pair
 		string err = string("Unbalanced parentheses in given expression: \"");
 		err.append(expression);
 		err.append("\"\n");
 		throw SyntaxError(err, SyntaxError::Type::UNBALANCED_PARENTHESES);
 	}
+	// All good, simply exit control flow
 }
 
+static bool IsValidCharOperation(const char op) {
+	return op == '*' || op == '/' || op == '+' || op == '-' || op == '^';
+}
 
+bool Expression::IsValidStringOperation(const string& op) {
+	static const vector<string> kExpressionStrings = { "round", "roundup", "rounddown", "sqrt", "pow", "min", "max" };
+	return find(kExpressionStrings.begin(), kExpressionStrings.end(), op) != kExpressionStrings.end();
+}
+
+/*
+* This function will check that all the substrings within the expression
+* that are made of alpha characters are actually supported operations. It will
+* also check that no unsupported operations from non-alphanumeric characters
+* are used (for example, "%"). Lastly, it will ignore any text within
+* square brackets, as that corresponds to a state value. It will check that the
+* text within the brackets only contains spaces and alpha characters and is not empty.
+*/
 void Expression::CheckValidExpressionOperations(const string& expression) {
-	static const vector<string> kExpressionStrings = {"round", "roundup", "rounddown", "sqrt", "pow", "min", "max"};
-	auto iter = expression.begin();
 	vector<string> substrings;
+	auto iter = expression.begin();
 	while (iter != expression.end()) {
 		if (*iter == '[') {
 			int alpha_count = 0;
@@ -83,9 +102,8 @@ void Expression::CheckValidExpressionOperations(const string& expression) {
 			substrings.push_back(move(current_string));
 		} else {
 			if (!isspace(*iter) && !isalnum(*iter)) {
-				if (*iter != '*' && *iter != '/' && *iter != '+' && *iter != '-' && *iter != '^' && *iter != '(' && *iter != ')') {
-					throw SyntaxError("Given expression has unexpected operator\n", SyntaxError::Type::INVALID_OPERATION);
-				} else if (*iter == '*' || *iter == '/' || *iter == '+' || *iter == '-' || *iter == '^') {
+				if (IsValidCharOperation(*iter)) { 
+					// if (IsBinaryCharOperation) { // Currently all char operations are binary, but this check will be necessary if that changes
 					if ((iter + 1) == expression.end() || (!isalnum(*(iter + 1)) && *(iter + 1) != '[' && *(iter + 1) != '(')) {
 						throw SyntaxError("Given expression is binary but missing righthand side\n", SyntaxError::Type::ILLFORMED_EXPRESSION);
 					}
@@ -93,14 +111,16 @@ void Expression::CheckValidExpressionOperations(const string& expression) {
 						printf("found error in %s with char %c\n", expression.c_str(), *iter);
 						throw SyntaxError("Given expression is binary but missing lefthand side\n", SyntaxError::Type::ILLFORMED_EXPRESSION);
 					}
+				} else if (*iter != '(' && *iter != ')') {
+					// We get here when the char operator is not expected, such as % or ? or "
+					throw SyntaxError("Given expression has unexpected operator\n", SyntaxError::Type::INVALID_OPERATION);
 				}
 			}
 			iter++;
 		}
 	}
 	for (string s : substrings) {
-		bool has_match = find(kExpressionStrings.begin(), kExpressionStrings.end(), s) != kExpressionStrings.end();
-		if (!has_match) {
+		if (!IsValidStringOperation(s)) {
 			string err("Given expression does not contain valid operation\nInvalid operation: ");
 			err.append(s);
 			err.append("\n");
@@ -110,14 +130,27 @@ void Expression::CheckValidExpressionOperations(const string& expression) {
 
 }
 
-void Expression::ParseAndBuildExpressionTree(const string& expression, ExpressionNode*& result) {
-	string lowercase_nowhitespace = expression;
-	transform(expression.begin(), expression.end(), lowercase_nowhitespace.begin(), [](unsigned char c) { return std::tolower(c); });
-	lowercase_nowhitespace.erase(remove_if(lowercase_nowhitespace.begin(), lowercase_nowhitespace.end(), isspace), lowercase_nowhitespace.end());
-	CheckEvenParentheses(lowercase_nowhitespace); // Will throw a SyntaxError if the values are not equal.
-	CheckValidExpressionOperations(lowercase_nowhitespace); // Will throw a SyntaxError if the operations given are not supported.
-	printf("Parsed string: %s\n", lowercase_nowhitespace.c_str());
+string FindRootOperation(const string& expression) {
+	auto iter = expression.begin();
+	string result;
+	int opening_brace_count = 0;
+	while (iter != expression.end()) {
+		if (*iter == '(') {
+			opening_brace_count++;
+		}
+		if (opening_brace_count == 0 && isalpha(*iter)) {
 
+		}
+		if (opening_brace_count == 0) {
+
+		}
+	}
+}
+
+void Expression::ParseAndBuildExpressionTree(const string& expression, ExpressionNode*& result) {
+	CheckEvenParentheses(expression); // Will throw a SyntaxError if the values are not equal.
+	CheckValidExpressionOperations(expression); // Will throw a SyntaxError if the operations given are not supported.
+	string root_operation = FindRootOperation(expression);
 }
 
 float Expression::GetValue(const GameState& game_state, const CharacterState& character_state) const
@@ -128,7 +161,11 @@ float Expression::GetValue(const GameState& game_state, const CharacterState& ch
 void Expression::SetExpression(const string& expression)
 {
 	Expression::ExpressionNode* temp = new ExpressionNode();
-	ParseAndBuildExpressionTree(expression, temp);
+	// This to-lowercase-no-whitespace transformation should probably be done before the expression is passed here.
+	string lowercase_nowhitespace = expression;
+	transform(expression.begin(), expression.end(), lowercase_nowhitespace.begin(), [](unsigned char c) { return std::tolower(c); });
+	lowercase_nowhitespace.erase(remove_if(lowercase_nowhitespace.begin(), lowercase_nowhitespace.end(), isspace), lowercase_nowhitespace.end());
+	ParseAndBuildExpressionTree(lowercase_nowhitespace, temp);
 	delete temp;
 }
 
