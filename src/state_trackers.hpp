@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <stdexcept>
 #include <stack>
+#include <queue>
 #include <sstream>
 #include <regex>
 
@@ -50,6 +51,7 @@ public:
 		ILLFORMED_EXPRESSION,   // Ex:    sqrt 10
 		INVALID_OPERATION,      // Ex:    nonexistent(2004)
 		INVALID_VARIABLE_NAME,  // Ex:    8 + [(*asjlkaj)]
+		EMPTY_OPERATION,		// Ex:	  sqrt()
 	};
 private:
 	string error_;
@@ -63,8 +65,8 @@ public:
 class Expression {
 private:
 	struct ExpressionNode {
-		enum NodeType {
-			TRUE_VALUE, // True value is the case where the value is just a number in the expression.
+		enum Type {
+			TRUE_VALUE,  // True value is the case where the value is just a number in the expression.
 			STATE_VALUE, // State value is the case where the value is stored in some state, whether it be character or game state.
 			ADDITION,
 			SUBTRACTION,
@@ -88,16 +90,19 @@ private:
 			Value() : true_value_(0.0) {}
 			~Value() {}
 		};
+		Type type_;
 		Value node_value_;
+		vector<ExpressionNode*> children_;
 	public:
-		ExpressionNode() {};
+		ExpressionNode(Type t) : type_(t) {};
 	};
 	string name_;
 	ExpressionNode* ast_root_; // Abstract Syntax Tree
 
 	static bool IsValidStringOperation(const string& op);
-
 	static bool IsValidCharOperation(const char op);
+	static int GetOperationPrecedence(const string& op);
+	static Expression::ExpressionNode::Type GetOperationNodeType(const string& op);
 
 	/*
 	* This function checks that an expression string uses valid format and will throw a
@@ -108,6 +113,13 @@ private:
 	*/
 	static void CheckValidExpressionOperations(const string& expression);
 
+	/*
+	* Given some expression, finds the root operation, i.e., the next operation
+	* to place in the AST. That operation is placed in the operation string
+	* given and the list of subexpressions (from left to right) is placed in the given
+	* sub-expression list.
+	*/
+	static void FindRootOperation(const string& expression, string& operation, queue<string>& subexpressions);
 	/*
 	* This will actually parse the expression string given. The current syntax I have in
 	* mind looks something like the following:
