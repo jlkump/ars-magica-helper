@@ -18,22 +18,17 @@ void CheckEvenParentheses(const string& expression) {
 		} else {
 			if (s.empty()) {
 				// We encountered a closed bracket with no corresponding open bracket.
-				string err = string("Unbalanced parentheses in given expression: \"");
-				err.append(expression);
-				err.append("\"\n");
-				throw SyntaxError(err, SyntaxError::Type::UNBALANCED_PARENTHESES);
+				throw SyntaxError(FormatString("Unbalanced parentheses in given expression: \"%s\".\n", expression.c_str()), 
+					SyntaxError::Type::UNBALANCED_PARENTHESES);
 			}
 			char open_brace = s.top();
 			if ((open_brace == '[' && cur != ']') || (open_brace == '{' && cur != '}') || (open_brace == '(' && cur != ')')) {
 				// We encountered the wrong pairing of brackets.
-				string err = string("Parentheses are not ordered correctly in expression: \"");
-				err.append(expression);
-				err.append("\"\nExpected a closing brace to \'");
-				err.push_back(open_brace);
-				err.append("\' but found \'");
-				err.push_back(cur);
-				err.append("\' instead.\n");
-				throw SyntaxError(err, SyntaxError::Type::INVALID_ORDERED_PARENTHESES);
+				throw SyntaxError(
+					FormatString("Parentheses are not ordered correctly in expression: "
+					"\"%s\"\nExpected a closing brace to \'%c\' but found \'%c\' instead.\n", expression.c_str(),
+					open_brace, cur), 
+					SyntaxError::Type::INVALID_ORDERED_PARENTHESES);
 			}
 			// If we get here, everything is OK and we can take the opening bracket off the stack.
 			s.pop();
@@ -41,16 +36,14 @@ void CheckEvenParentheses(const string& expression) {
 	}
 	if (!s.empty()) {
 		// If we get here, we still have opening brackets that had no closing bracket pair
-		string err = string("Unbalanced parentheses in given expression: \"");
-		err.append(expression);
-		err.append("\"\n");
-		throw SyntaxError(err, SyntaxError::Type::UNBALANCED_PARENTHESES);
+		throw SyntaxError(
+			FormatString("Unbalanced parentheses in given expression: \"%s\"\n", expression.c_str()), 
+			SyntaxError::Type::UNBALANCED_PARENTHESES);
 	}
 	// All good, simply exit control flow
 }
 
 Expression::ExpressionNode::~ExpressionNode() {
-	// Hopefully this works :P
 	for (ExpressionNode* child : this->children_) {
 		delete child;
 	}
@@ -65,6 +58,17 @@ bool Expression::IsValidStringOperation(const string& op) {
 	return find(kExpressionStrings.begin(), kExpressionStrings.end(), op) != kExpressionStrings.end();
 }
 
+bool Expression::IsValidVariableName(const string& var) {
+	auto iter = var.begin();
+	while (iter != var.end()) {
+		if (!isspace(*iter) && !isalpha(*iter)) {
+			return false;
+		}
+		iter++;
+	}
+	return true;
+}
+
 /*
 * This function will check that all the substrings within the expression
 * that are made of alpha characters are actually supported operations. It will
@@ -74,29 +78,29 @@ bool Expression::IsValidStringOperation(const string& op) {
 * text within the brackets only contains spaces and alpha characters and is not empty.
 */
 void Expression::CheckValidExpressionOperations(const string& expression) {
-	vector<string> substrings;
 	auto iter = expression.begin();
 	while (iter != expression.end()) {
 		if (*iter == '[') {
-			int alpha_count = 0;
 			iter++;
+			string variable;
 			while (iter != expression.end() && *iter != ']') {
-				if (isalpha(*iter)) {
-					alpha_count++;
-				} else if (!isspace(*iter)) {
-					throw SyntaxError("Given variable has invalid characters characters\n", SyntaxError::Type::INVALID_VARIABLE_NAME);
-				}
+				variable.push_back(*iter);
 				iter++;
 			}
-			if (alpha_count == 0) {
+			if (!IsValidVariableName(variable)) {
+				throw SyntaxError(
+					FormatString("Given variable [%s] contains invalid characters. Only use letters and spaces.\n", variable.c_str()),
+					SyntaxError::Type::INVALID_VARIABLE_NAME);
+			}
+			if (variable.size() == 0) {
 				throw SyntaxError("Given expression does not contain any name within brackets []\n", SyntaxError::Type::EMPTY_STATE_VALUE_NAME);
 			}
 			iter++;
 		} else if (isalpha(*iter)) {
-			string current_string;
+			string op_string;
 			// add the current word to the list of strings in the expression
 			while (iter != expression.end() && isalpha(*iter)) {
-				current_string.push_back(*iter);
+				op_string.push_back(*iter);
 				iter++;
 			}
 			auto temp = iter;
@@ -104,39 +108,59 @@ void Expression::CheckValidExpressionOperations(const string& expression) {
 				temp++;
 			}
 			if (temp == expression.end() || *temp != '(') {
-				throw SyntaxError("Given operation is missing parentheses\n", SyntaxError::Type::ILLFORMED_EXPRESSION);
+				if (!IsValidStringOperation(op_string)) {
+					throw SyntaxError(
+						FormatString("Given operation \"%s\" is not a valid operation.\n",
+							op_string.c_str()), SyntaxError::Type::ILLFORMED_EXPRESSION);
+				} else {
+					throw SyntaxError(
+						FormatString("Given operation \"%s\" is missing parentheses. Should be \"%s(...)\" instead.\n",
+							op_string.c_str(), op_string.c_str()), SyntaxError::Type::ILLFORMED_EXPRESSION);
+				}
 			}
-			substrings.push_back(move(current_string));
 		} else if (*iter == '(' && (iter + 1 == expression.end() || *(iter + 1) == ')')) {
-			throw SyntaxError("Given operation has no parameters.\n", SyntaxError::Type::EMPTY_OPERATION);
+			string op_string;
+			iter--;
+			while (iter != expression.begin() && isalpha(*iter)) {
+				op_string.insert(0, 1, *iter);
+				iter--;
+			}
+			if (isalpha(*iter)) {
+				op_string.insert(0, 1, *iter);
+			}
+			if (!IsValidStringOperation(op_string)) {
+				throw SyntaxError(
+					FormatString("Given operation \"%s\" is not a valid operation.\n",
+						op_string.c_str()), SyntaxError::Type::ILLFORMED_EXPRESSION);
+			} else {
+				throw SyntaxError(
+					FormatString("Given operation \"%s\" has no parameters.\n", op_string.c_str()),
+					SyntaxError::Type::EMPTY_OPERATION);
+			}
 		} else {
 			if (!isspace(*iter) && !isalnum(*iter)) {
 				if (IsValidCharOperation(*iter)) { 
 					// if (IsBinaryCharOperation) { // Currently all char operations are binary, but this check will be necessary if that changes
 					if ((iter + 1) == expression.end() || (!isalnum(*(iter + 1)) && *(iter + 1) != '[' && *(iter + 1) != '(')) {
-						throw SyntaxError("Given expression is binary but missing righthand side\n", SyntaxError::Type::ILLFORMED_EXPRESSION);
+						throw SyntaxError(
+							FormatString("Given operation \'%c\' is binary but missing righthand side.\n", *iter), 
+							SyntaxError::Type::ILLFORMED_EXPRESSION);
 					}
 					if (iter == expression.begin() || (!isalnum(*(iter - 1)) && *(iter - 1) != ']' && *(iter - 1) != ')')) {
-						printf("found error in %s with char %c\n", expression.c_str(), *iter);
-						throw SyntaxError("Given expression is binary but missing lefthand side\n", SyntaxError::Type::ILLFORMED_EXPRESSION);
+						throw SyntaxError(
+							FormatString("Given operation \'%c\' is binary but missing lefthand side.\n", *iter), 
+							SyntaxError::Type::ILLFORMED_EXPRESSION);
 					}
 				} else if (*iter != '(' && *iter != ')' && *iter != '.' && *iter != ',') {
 					// We get here when the char operator is not expected, such as % or ? or "
-					throw SyntaxError("Given expression has unexpected operator\n", SyntaxError::Type::INVALID_OPERATION);
+					throw SyntaxError(
+						FormatString("Given operation \'%c\' is not supported.\n", *iter), 
+						SyntaxError::Type::INVALID_OPERATION);
 				}
 			}
 			iter++;
 		}
 	}
-	for (string s : substrings) {
-		if (!IsValidStringOperation(s)) {
-			string err("Given expression does not contain valid operation\nInvalid operation: ");
-			err.append(s);
-			err.append("\n");
-			throw SyntaxError(err, SyntaxError::Type::INVALID_OPERATION);
-		}
-	}
-
 }
 
 int Expression::GetOperationPrecedence(const string& op) {

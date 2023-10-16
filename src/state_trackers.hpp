@@ -5,13 +5,13 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <stdexcept>
 #include <stack>
 #include <queue>
 #include <sstream>
 #include <regex>
-
 #include <iostream>
+
+#include "error.hpp"
 
 using namespace std;
 
@@ -42,27 +42,6 @@ private:
 protected:
 public:
 	unordered_map<string, float> state_;
-};
-
-class SyntaxError : public exception {
-public:
-	enum Type {
-		UNBALANCED_PARENTHESES, // Ex:   8 * (1 + 2))
-		INVALID_ORDERED_PARENTHESES, // Ex:   8 * (1 + 2]
-		EMPTY_STATE_VALUE_NAME, // Ex:    8 + []
-		ILLFORMED_EXPRESSION,   // Ex:    sqrt 10
-		INVALID_OPERATION,      // Ex:    nonexistent(2004)
-		INVALID_VARIABLE_NAME,  // Ex:    8 + [(*asjlkaj)]
-		EMPTY_OPERATION,		// Ex:	  sqrt()
-		INVALID_NUMBER_FORMAT,  // Ex:    8.0.0 or 8e324a33 or 0x10AD3
-	};
-private:
-	string error_;
-	Type type_;
-public:
-	SyntaxError(const string& error, Type t) : error_(error), type_(t) {}
-	virtual const char* what() const noexcept { return error_.c_str();  }
-	SyntaxError::Type GetType() { return type_; }
 };
 
 class Expression {
@@ -104,6 +83,7 @@ private:
 	ExpressionNode* ast_root_; // Abstract Syntax Tree
 	static bool IsValidStringOperation(const string& op);
 	static bool IsValidCharOperation(const char op);
+	static bool IsValidVariableName(const string& var);
 	static int GetOperationPrecedence(const string& op);
 	static Expression::ExpressionNode::Type GetOperationNodeType(const string& op);
 
