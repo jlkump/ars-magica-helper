@@ -296,7 +296,7 @@ void Expression::FindRootOperation(const string& expression, string& operation, 
 		subexpressions.push_back(subexp);
 		break;
 	case Expression::ExpressionNode::Type::POW:
-		if (expression == "^") {
+		if (*iter == '^') {
 			// Special case for the char '^' as the power operation
 			while (left_iter != iter) {
 				subexp.push_back(*left_iter);
