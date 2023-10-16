@@ -1,4 +1,4 @@
-#include "state_trackers.hpp"
+﻿#include "state_trackers.hpp"
 
 /*
 * This function will check that the parentheses of a given string are balanced. If they are not,
@@ -49,6 +49,13 @@ void CheckEvenParentheses(const string& expression) {
 	// All good, simply exit control flow
 }
 
+Expression::ExpressionNode::~ExpressionNode() {
+	// Hopefully this works :P
+	for (ExpressionNode* child : this->children_) {
+		delete child;
+	}
+}
+
 bool Expression::IsValidCharOperation(const char op) {
 	return op == '*' || op == '/' || op == '+' || op == '-' || op == '^';
 }
@@ -97,9 +104,11 @@ void Expression::CheckValidExpressionOperations(const string& expression) {
 				temp++;
 			}
 			if (temp == expression.end() || *temp != '(') {
-				throw SyntaxError("Given expression is missing parentheses\n", SyntaxError::Type::ILLFORMED_EXPRESSION);
+				throw SyntaxError("Given operation is missing parentheses\n", SyntaxError::Type::ILLFORMED_EXPRESSION);
 			}
 			substrings.push_back(move(current_string));
+		} else if (*iter == '(' && (iter + 1 == expression.end() || *(iter + 1) == ')')) {
+			throw SyntaxError("Given operation has no parameters.\n", SyntaxError::Type::EMPTY_OPERATION);
 		} else {
 			if (!isspace(*iter) && !isalnum(*iter)) {
 				if (IsValidCharOperation(*iter)) { 
@@ -152,7 +161,10 @@ Expression::ExpressionNode::Type Expression::GetOperationNodeType(const string& 
 		{"min",  Expression::ExpressionNode::Type::MIN}, {"max",  Expression::ExpressionNode::Type::MAX},
 	};
 	if (kStringsToEnumMap.count(op) == 0) {
-		if (*op.begin() == '[') {
+		if (op.begin() == op.end()) {
+			return Expression::ExpressionNode::Type::INVALID;
+		}
+		if (*op.begin() == '[' && *(op.end() - 1) == ']') {
 			return Expression::ExpressionNode::Type::STATE_VALUE;
 		} else if (*op.begin() == '.' || (*op.begin() >= '0' && *op.begin() <= '9')) {
 			// Is a flat value
@@ -170,7 +182,7 @@ Expression::ExpressionNode::Type Expression::GetOperationNodeType(const string& 
 * 2. Find the possible "root" operations in the expression. There could be multiple root operations
 *    so pick between the one with the highest precedence. When precedence is tied, pick the one furthest left.
 */
-void Expression::FindRootOperation(const string& expression, string& operation, queue<string>& subexpressions) {
+void Expression::FindRootOperation(const string& expression, string& operation, vector<string>& subexpressions) {
 	auto begin = expression.begin();
 	auto end = expression.end();
 	int opening_brace_count = 0;
@@ -186,7 +198,6 @@ void Expression::FindRootOperation(const string& expression, string& operation, 
 	}
 	auto iter = begin;
 	while (iter != end) {
-		printf("Currently on character %c with brace count %d\n", *iter, opening_brace_count);
 		if (*iter == '(') {
 			opening_brace_count++;
 		} else if (*iter == ')') {
@@ -207,7 +218,6 @@ void Expression::FindRootOperation(const string& expression, string& operation, 
 			}
 			precedences.push_back(precedence);
 			possible_root_operations.push_back(op);
-			printf("Found operation: %s with precedence %d\n", op.c_str(), precedence);
 			possible_root_operation_ptrs.push_back(iter);
 			opening_brace_count++; // This is done b/c the iter will skip over the opening parentheses for the operation, so just add to brace count manually.
 		} else if (opening_brace_count == 0 && IsValidCharOperation(*iter)) {
@@ -219,7 +229,6 @@ void Expression::FindRootOperation(const string& expression, string& operation, 
 			}
 			precedences.push_back(precedence);
 			possible_root_operations.push_back(op);
-			printf("Found operation: %s with precedence %d\n", op.c_str(), precedence);
 			possible_root_operation_ptrs.push_back(iter);
 		}
 		iter++;
@@ -229,7 +238,6 @@ void Expression::FindRootOperation(const string& expression, string& operation, 
 	int root_op_index = -1;
 	// Because we start from the back, the root_op_index will always be the left-most highest precedence operation index.
 	for (int i = precedences.size() - 1; i >= 0; i--) {
-		printf("Currently possible operation %s with precedence %d\n", possible_root_operations[i].c_str(), precedences[i]);
 		if (precedences[i] == max_precedence) {
 			count_of_equal_precedence++;
 			root_op_index = i;
@@ -255,13 +263,13 @@ void Expression::FindRootOperation(const string& expression, string& operation, 
 			subexp.push_back(*left_iter);
 			left_iter++;
 		}
-		subexpressions.push(subexp);
+		subexpressions.push_back(subexp);
 		subexp.clear();
 		while (right_iter != end) {
 			subexp.push_back(*right_iter);
 			right_iter++;
 		}
-		subexpressions.push(subexp);
+		subexpressions.push_back(subexp);
 		break;
 	case Expression::ExpressionNode::Type::POW:
 		if (expression == "^") {
@@ -270,13 +278,13 @@ void Expression::FindRootOperation(const string& expression, string& operation, 
 				subexp.push_back(*left_iter);
 				left_iter++;
 			}
-			subexpressions.push(subexp);
+			subexpressions.push_back(subexp);
 			subexp.clear();
 			while (right_iter != end) {
 				subexp.push_back(*right_iter);
 				right_iter++;
 			}
-			subexpressions.push(subexp);
+			subexpressions.push_back(subexp);
 			break;
 		}
 	case Expression::ExpressionNode::Type::ROUND:
@@ -292,7 +300,7 @@ void Expression::FindRootOperation(const string& expression, string& operation, 
 		end--;
 		while (iter != end) {
 			if (*iter == ',') {
-				subexpressions.push(subexp);
+				subexpressions.push_back(subexp);
 				subexp.clear();
 			}
 			else {
@@ -300,7 +308,7 @@ void Expression::FindRootOperation(const string& expression, string& operation, 
 			}
 			iter++;
 		}
-		subexpressions.push(subexp);
+		subexpressions.push_back(subexp);
 		break;
 	case Expression::ExpressionNode::Type::INVALID:
 	case Expression::ExpressionNode::Type::TRUE_VALUE:
@@ -310,37 +318,93 @@ void Expression::FindRootOperation(const string& expression, string& operation, 
 	}
 }
 
+bool IsTrueValue(string& s) {
+	int dot_count = 0;
+	int open_paren = 0;
+	int close_paren = 0;
+	for (const char c : s) {
+		if (c == '.') {
+			dot_count++;
+		} else if (c == '(') {
+			open_paren++;
+		} else if (c == ')') {
+			close_paren++;
+		} else if (!(c >= '0' && c <= '9')) {
+			return false;
+		}
+	}
+	if (open_paren != close_paren) return false;
+	if (open_paren > 0) {
+		auto iter = s.begin();
+		auto end = s.end();
+		while (iter < end && *iter == '(' && *(end - 1) == ')') {
+			iter++;
+			end--;
+		}
+		s = string(iter, end);
+	}
+	return dot_count < 2;
+}
+
+bool IsStateValue(const string& s) {
+	if (s.begin() == s.end() || *s.begin() != '[' || *(s.end() - 1) != ']') {
+		return false;
+	}
+	
+	int brace_count = 0;
+	for (const char c : s) {
+		if (c == '[') brace_count++;
+	}
+	return brace_count == 1;
+}
+
 void Expression::ParseAndBuildExpressionTree(const string& expression, ExpressionNode*& result) {
 	CheckEvenParentheses(expression); // Will throw a SyntaxError if the values are not equal.
 	CheckValidExpressionOperations(expression); // Will throw a SyntaxError if the operations given are not supported.
 
+	typedef struct expression_parse_item {
+		string expression;
+		ExpressionNode* parent_of_expression;
+		expression_parse_item(const string& e, ExpressionNode* p) : expression(e), parent_of_expression(p) {}
+	};
+
 	string operation;
-	queue<string> sub_expressions;
+	vector<string> sub_expressions;
 	FindRootOperation(expression, operation, sub_expressions);
 	result = new ExpressionNode(GetOperationNodeType(operation));
-	while (!sub_expressions.empty()) {
-		Expression::ExpressionNode::Type t = GetOperationNodeType(sub_expressions.front());
-		switch () {
-
-		}
-		sub_expressions.pop();
+	result->node_value_ = operation;
+	queue<expression_parse_item> items;
+	for (const string& exp : sub_expressions) {
+		items.push(expression_parse_item(exp, result));
 	}
+	sub_expressions.clear();
 
-	queue<string> substrings;
-	substrings.push(expression);
-	while (!substrings.empty()) {
-		string current = substrings.front();
-		substrings.pop();
-		if (IsNumericOnly(current)) {
 
-		} else if (IsStateValue(current)) {
-
+	while (!items.empty()) {
+		expression_parse_item current = items.front();
+		ExpressionNode* child = nullptr;
+		if (IsTrueValue(current.expression)) {
+			child = new ExpressionNode(ExpressionNode::TRUE_VALUE);
+			child->node_value_ = current.expression;
+		} else if (IsStateValue(current.expression)) {
+			child = new ExpressionNode(ExpressionNode::STATE_VALUE);
+			child->node_value_ = current.expression.substr(1, current.expression.size() - 2);
 		} else {
-
-			for (const string& s : sub_expressions) {
-				substrings.push(s);
+			FindRootOperation(current.expression, operation, sub_expressions);
+			child = new ExpressionNode(GetOperationNodeType(operation));
+			if (child->type_ == ExpressionNode::INVALID) {
+				delete result;
+				result = nullptr;
+				throw SyntaxError("Invalid expression\n", SyntaxError::Type::ILLFORMED_EXPRESSION);
 			}
+			child->node_value_ = operation;
+			for (const string& exp : sub_expressions) {
+				items.push(expression_parse_item(exp, child));
+			}
+			sub_expressions.clear();
 		}
+		current.parent_of_expression->children_.push_back(child);
+		items.pop();
 	}
 }
 
@@ -348,15 +412,43 @@ float Expression::GetValue(const GameState& game_state, const CharacterState& ch
 {
 	return 0.0f;
 }
+/*
+* Code from https://stackoverflow.com/questions/36802354/print-binary-tree-in-a-pretty-way-using-c
+*/
+void Expression::PrintTreePrettyRecursiveHelper(const std::string& prefix, const ExpressionNode* node, bool end) {
+	if (node != nullptr)
+	{
+		cout << prefix;
+
+		cout << (end ? "|__" : "|__");
+		// print the value of the node
+		if (node->type_ == ExpressionNode::TRUE_VALUE) {
+			std::cout << node->node_value_ << std::endl;
+		} else if (node->type_ == ExpressionNode::STATE_VALUE) {
+			std::cout << node->node_value_ << std::endl;
+		} else {
+			std::cout << node->node_value_ << std::endl;
+		}
+
+		for (int i = 0; i < node->children_.size(); i++) {
+			const ExpressionNode* child = node->children_[i];
+			PrintTreePrettyRecursiveHelper(prefix + (end ? "    " : "|   "), child, i == node->children_.size() - 1);
+		}
+	}
+}
+void Expression::PrintTreePretty(const ExpressionNode* root) {
+	PrintTreePrettyRecursiveHelper("", root, true);
+}
 
 void Expression::SetExpression(const string& expression)
 {
-	Expression::ExpressionNode* temp = new ExpressionNode();
+	Expression::ExpressionNode* temp;
 	// This to-lowercase-no-whitespace transformation should probably be done before the expression is passed here.
 	string lowercase_nowhitespace = expression;
 	transform(expression.begin(), expression.end(), lowercase_nowhitespace.begin(), [](unsigned char c) { return std::tolower(c); });
 	lowercase_nowhitespace.erase(remove_if(lowercase_nowhitespace.begin(), lowercase_nowhitespace.end(), isspace), lowercase_nowhitespace.end());
 	ParseAndBuildExpressionTree(lowercase_nowhitespace, temp);
+	PrintTreePretty(temp);
 	delete temp;
 }
 

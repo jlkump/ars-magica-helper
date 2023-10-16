@@ -11,6 +11,8 @@
 #include <sstream>
 #include <regex>
 
+#include <iostream>
+
 using namespace std;
 
 class GameState;
@@ -52,6 +54,7 @@ public:
 		INVALID_OPERATION,      // Ex:    nonexistent(2004)
 		INVALID_VARIABLE_NAME,  // Ex:    8 + [(*asjlkaj)]
 		EMPTY_OPERATION,		// Ex:	  sqrt()
+		INVALID_NUMBER_FORMAT,  // Ex:    8.0.0 or 8e324a33 or 0x10AD3
 	};
 private:
 	string error_;
@@ -82,27 +85,33 @@ private:
 			TERNERY,
 			INVALID,
 		};
-		union Value {
-			float true_value_;
-			string state_value_;
-			bool bool_value_;
+		//union Value {
+		//	float true_value_;
+		//	string state_value_;
+		//	string operation_value_;
 
-			Value() : true_value_(0.0) {}
-			~Value() {}
-		};
+		//	Value() : true_value_(0.0) {}
+		//	~Value() {}
+		//};
 		Type type_;
-		Value node_value_;
-		vector<ExpressionNode*> children_;
+		string node_value_;
+		vector<ExpressionNode*> children_; // Might move this under the value union in the future.
 	public:
 		ExpressionNode(Type t) : type_(t) {};
+		~ExpressionNode();
 	};
 	string name_;
 	ExpressionNode* ast_root_; // Abstract Syntax Tree
-
 	static bool IsValidStringOperation(const string& op);
 	static bool IsValidCharOperation(const char op);
 	static int GetOperationPrecedence(const string& op);
 	static Expression::ExpressionNode::Type GetOperationNodeType(const string& op);
+
+
+	// Debugging helper
+	static void PrintTreePrettyRecursiveHelper(const std::string& prefix, const ExpressionNode* node, bool end);
+	static void PrintTreePretty(const ExpressionNode* root);
+
 
 	/*
 	* This function checks that an expression string uses valid format and will throw a
@@ -119,7 +128,7 @@ private:
 	* given and the list of subexpressions (from left to right) is placed in the given
 	* sub-expression list.
 	*/
-	static void FindRootOperation(const string& expression, string& operation, queue<string>& subexpressions);
+	static void FindRootOperation(const string& expression, string& operation, vector<string>& subexpressions);
 	/*
 	* This will actually parse the expression string given. The current syntax I have in
 	* mind looks something like the following:
