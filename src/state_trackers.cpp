@@ -43,6 +43,16 @@ void CheckEvenParentheses(const string& expression) {
 	// All good, simply exit control flow
 }
 
+void TrimExcessParentheses(string& s) {
+	auto iter = s.begin();
+	auto end = s.end();
+	while (iter < end && *iter == '(' && *(end - 1) == ')') {
+		iter++;
+		end--;
+	}
+	s = string(iter, end);
+}
+
 Expression::ExpressionNode::~ExpressionNode() {
 	for (ExpressionNode* child : this->children_) {
 		delete child;
@@ -166,8 +176,8 @@ void Expression::CheckValidExpressionOperations(const string& expression) {
 int Expression::GetOperationPrecedence(const string& op) {
 	static const unordered_map<string, int> kOperationPrecedence = {
 		{"round", 0}, {"rounddown", 0}, {"roundup", 0}, {"min", 0}, {"max", 0}, {"sqrt", 0}, {"pow", 0}, {"^", 0},
-		{"-", 1}, {"+", 1}, 
-		{"*", 2}, {"/", 2}
+		{"*", 1}, {"/", 1},
+		{"-", 2}, {"+", 2}, 
 	};
 	if (kOperationPrecedence.count(op) == 0) {
 		return -1;
@@ -260,8 +270,8 @@ void Expression::FindRootOperation(const string& expression, string& operation, 
 
 	int count_of_equal_precedence = 0;
 	int root_op_index = -1;
-	// Because we start from the back, the root_op_index will always be the left-most highest precedence operation index.
-	for (int i = precedences.size() - 1; i >= 0; i--) {
+	// Had precedence reversed before. Fixed now (Thanks Kevin)
+	for (int i = 0; i < precedences.size(); i++) {
 		if (precedences[i] == max_precedence) {
 			count_of_equal_precedence++;
 			root_op_index = i;
@@ -283,6 +293,7 @@ void Expression::FindRootOperation(const string& expression, string& operation, 
 	case Expression::ExpressionNode::Type::DIVISION:
 	case Expression::ExpressionNode::Type::MULTIPLICATION:
 		// This is for binary operations that have a single char operator
+		// We parse the expression on the left and right sides of the operator
 		while (left_iter != iter) {
 			subexp.push_back(*left_iter);
 			left_iter++;
@@ -317,6 +328,7 @@ void Expression::FindRootOperation(const string& expression, string& operation, 
 	case Expression::ExpressionNode::Type::SQRT:
 	case Expression::ExpressionNode::Type::MIN:
 	case Expression::ExpressionNode::Type::MAX:
+		// Here we parse a comma seperated list of sub-expressions
 		while (iter != end && isalpha(*iter)) {
 			iter++;
 		}
@@ -344,28 +356,12 @@ void Expression::FindRootOperation(const string& expression, string& operation, 
 
 bool IsTrueValue(string& s) {
 	int dot_count = 0;
-	int open_paren = 0;
-	int close_paren = 0;
 	for (const char c : s) {
 		if (c == '.') {
 			dot_count++;
-		} else if (c == '(') {
-			open_paren++;
-		} else if (c == ')') {
-			close_paren++;
 		} else if (!(c >= '0' && c <= '9')) {
 			return false;
 		}
-	}
-	if (open_paren != close_paren) return false;
-	if (open_paren > 0) {
-		auto iter = s.begin();
-		auto end = s.end();
-		while (iter < end && *iter == '(' && *(end - 1) == ')') {
-			iter++;
-			end--;
-		}
-		s = string(iter, end);
 	}
 	return dot_count < 2;
 }
@@ -406,6 +402,7 @@ void Expression::ParseAndBuildExpressionTree(const string& expression, Expressio
 
 	while (!items.empty()) {
 		expression_parse_item current = items.front();
+		TrimExcessParentheses(current.expression);
 		ExpressionNode* child = nullptr;
 		if (IsTrueValue(current.expression)) {
 			child = new ExpressionNode(ExpressionNode::TRUE_VALUE);
@@ -434,8 +431,21 @@ void Expression::ParseAndBuildExpressionTree(const string& expression, Expressio
 
 float Expression::GetValue(const GameState& game_state, const CharacterState& character_state) const
 {
+	// TODO: Complete GetValue
+	stack<ExpressionNode*> depth_iter;
+	depth_iter.push(ast_root_);
+	while (!depth_iter.empty()) {
+		if (depth_iter.top()->type_ != ExpressionNode::TRUE_VALUE || 
+			depth_iter.top()->type_ != ExpressionNode::STATE_VALUE) {
+			for (ExpressionNode* child : depth_iter.top()->children_) {
+				depth_iter.push(child);
+			}
+		}
+	}
+
 	return 0.0f;
 }
+
 /*
 * Code from https://stackoverflow.com/questions/36802354/print-binary-tree-in-a-pretty-way-using-c
 */
@@ -460,20 +470,19 @@ void Expression::PrintTreePrettyRecursiveHelper(const std::string& prefix, const
 		}
 	}
 }
+
 void Expression::PrintTreePretty(const ExpressionNode* root) {
 	PrintTreePrettyRecursiveHelper("", root, true);
 }
 
 void Expression::SetExpression(const string& expression)
 {
-	Expression::ExpressionNode* temp;
 	// This to-lowercase-no-whitespace transformation should probably be done before the expression is passed here.
 	string lowercase_nowhitespace = expression;
 	transform(expression.begin(), expression.end(), lowercase_nowhitespace.begin(), [](unsigned char c) { return std::tolower(c); });
 	lowercase_nowhitespace.erase(remove_if(lowercase_nowhitespace.begin(), lowercase_nowhitespace.end(), isspace), lowercase_nowhitespace.end());
-	ParseAndBuildExpressionTree(lowercase_nowhitespace, temp);
-	PrintTreePretty(temp);
-	delete temp;
+	ParseAndBuildExpressionTree(lowercase_nowhitespace, ast_root_);
+	PrintTreePretty(ast_root_);
 }
 
 float CharacterState::GetValue(const GameState& game_state, const string& value_name) const

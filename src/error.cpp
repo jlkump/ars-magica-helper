@@ -1,9 +1,5 @@
 #include "error.hpp"
 
-SyntaxError::SyntaxError(const string& error, Type t) : error_(error), type_(t) {
-
-}
-
 string FormatString(const char* format ...)
 {
 	va_list args;

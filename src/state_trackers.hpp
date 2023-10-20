@@ -120,6 +120,11 @@ private:
 	* make it easier to compare and use for the player. Thus, CREO EXP would be the same as creoexp.
 	*/
 	static void ParseAndBuildExpressionTree(const string& expression, ExpressionNode*& result);
+
+	/*
+	* Recursive evaluation helper for getting the value of the expression.
+	*/
+
 protected:
 public:
 	Expression(const string& name) : name_(name), ast_root_(nullptr) {}

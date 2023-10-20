@@ -9,6 +9,21 @@ using namespace std;
 
 string FormatString(const char* format ...);
 
+class ExpressionError : public exception {
+public:
+	enum Type {
+		NONEXISTANT_STATE_VALUE,
+		DIVIDE_BY_ZERO,
+	};
+private:
+	string error_;
+	Type type_;
+public:
+	ExpressionError(const string& error, Type t) : error_(error), type_(t) {}
+	virtual const char* what() const noexcept { return error_.c_str(); }
+	ExpressionError::Type GetType() { return type_; }
+};
+
 class SyntaxError : public exception {
 public:
 	enum Type {
@@ -26,7 +41,7 @@ private:
 	string error_;
 	Type type_;
 public:
-	SyntaxError(const string& error, Type t);
+	SyntaxError(const string& error, Type t) : error_(error), type_(t) {}
 	virtual const char* what() const noexcept { return error_.c_str(); }
 	SyntaxError::Type GetType() { return type_; }
 };
