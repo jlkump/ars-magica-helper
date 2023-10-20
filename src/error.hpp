@@ -13,6 +13,7 @@ class ExpressionError : public exception {
 public:
 	enum Type {
 		NONEXISTANT_STATE_VALUE,
+		INVALID_NODE,
 		DIVIDE_BY_ZERO,
 	};
 private:

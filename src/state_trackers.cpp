@@ -378,11 +378,23 @@ bool IsStateValue(const string& s) {
 	return brace_count == 1;
 }
 
-void Expression::ParseAndBuildExpressionTree(const string& expression, ExpressionNode*& result) {
+/*
+* Given an expression (as defined in state_trackers.hpp), this function will parse the expression,
+* making sure it is in the correct format. If it is, it will build an expression tree which will
+* have the root placed in the param: result. If it is not in correct syntax format, then a 
+* SyntaxError will be thrown with the appropriate error message associated with the syntax mistake.
+* 
+* This is an internal helper function that is used for the creation of and modification of the AST
+* of an Expression. For more details, see state_trackers.hpp --> Expression and ExpressionNode definitions.
+*/
+void Expression::ParseAndBuildExpressionTree(const string& expression, ExpressionNode*& result, int& num_tree_nodes) {
 	CheckEvenParentheses(expression); // Will throw a SyntaxError if the values are not equal.
 	CheckValidExpressionOperations(expression); // Will throw a SyntaxError if the operations given are not supported.
 
-	typedef struct expression_parse_item {
+	// This struct is to make parsing the expression easier in terms of building a tree
+	// It associates some sub-expression with the parent of the sub-expression to make
+	// the tree building easy.
+	struct expression_parse_item {
 		string expression;
 		ExpressionNode* parent_of_expression;
 		expression_parse_item(const string& e, ExpressionNode* p) : expression(e), parent_of_expression(p) {}
@@ -393,13 +405,14 @@ void Expression::ParseAndBuildExpressionTree(const string& expression, Expressio
 	FindRootOperation(expression, operation, sub_expressions);
 	result = new ExpressionNode(GetOperationNodeType(operation));
 	result->node_value_ = operation;
+
 	queue<expression_parse_item> items;
 	for (const string& exp : sub_expressions) {
 		items.push(expression_parse_item(exp, result));
 	}
 	sub_expressions.clear();
 
-
+	num_tree_nodes = 0;
 	while (!items.empty()) {
 		expression_parse_item current = items.front();
 		TrimExcessParentheses(current.expression);
@@ -409,7 +422,7 @@ void Expression::ParseAndBuildExpressionTree(const string& expression, Expressio
 			child->node_value_ = current.expression;
 		} else if (IsStateValue(current.expression)) {
 			child = new ExpressionNode(ExpressionNode::STATE_VALUE);
-			child->node_value_ = current.expression.substr(1, current.expression.size() - 2);
+			child->node_value_ = current.expression.substr(1, current.expression.size() - 2); // Chop off the brackets []
 		} else {
 			FindRootOperation(current.expression, operation, sub_expressions);
 			child = new ExpressionNode(GetOperationNodeType(operation));
@@ -418,7 +431,7 @@ void Expression::ParseAndBuildExpressionTree(const string& expression, Expressio
 				result = nullptr;
 				throw SyntaxError("Invalid expression\n", SyntaxError::Type::ILLFORMED_EXPRESSION);
 			}
-			child->node_value_ = operation;
+			child->node_value_ = operation; // Storing the operation isn't strictly necessary, but might as well since we have the space
 			for (const string& exp : sub_expressions) {
 				items.push(expression_parse_item(exp, child));
 			}
@@ -426,24 +439,65 @@ void Expression::ParseAndBuildExpressionTree(const string& expression, Expressio
 		}
 		current.parent_of_expression->children_.push_back(child);
 		items.pop();
+		num_tree_nodes++;
 	}
 }
 
-float Expression::GetValue(const GameState& game_state, const CharacterState& character_state) const
-{
-	// TODO: Complete GetValue
-	stack<ExpressionNode*> depth_iter;
-	depth_iter.push(ast_root_);
-	while (!depth_iter.empty()) {
-		if (depth_iter.top()->type_ != ExpressionNode::TRUE_VALUE || 
-			depth_iter.top()->type_ != ExpressionNode::STATE_VALUE) {
-			for (ExpressionNode* child : depth_iter.top()->children_) {
-				depth_iter.push(child);
-			}
+float Expression::GetValueRecursiveHelper(const ExpressionNode* cur, const GameState& game_state, const CharacterState& character_state) const {
+	float scratch = 0.0f;
+	int index_scratch = 0;
+	switch (cur->type_) {
+	case Expression::ExpressionNode::Type::ADDITION:
+		return GetValueRecursiveHelper(cur->children_[0], game_state, character_state) + GetValueRecursiveHelper(cur->children_[1], game_state, character_state);
+	case Expression::ExpressionNode::Type::SUBTRACTION:
+		return GetValueRecursiveHelper(cur->children_[0], game_state, character_state) - GetValueRecursiveHelper(cur->children_[1], game_state, character_state);
+	case Expression::ExpressionNode::Type::DIVISION:
+		scratch = GetValueRecursiveHelper(cur->children_[1], game_state, character_state);
+		if (scratch == 0.0) {
+			throw ExpressionError(FormatString("Divide by zero in expression of name \"%s\".\n", name_), ExpressionError::DIVIDE_BY_ZERO);
 		}
+		return GetValueRecursiveHelper(cur->children_[0], game_state, character_state) / scratch;
+	case Expression::ExpressionNode::Type::MULTIPLICATION:
+		return GetValueRecursiveHelper(cur->children_[0], game_state, character_state) * GetValueRecursiveHelper(cur->children_[1], game_state, character_state);
+	case Expression::ExpressionNode::Type::POW:
+		return pow(GetValueRecursiveHelper(cur->children_[0], game_state, character_state), GetValueRecursiveHelper(cur->children_[1], game_state, character_state));
+	case Expression::ExpressionNode::Type::ROUND:
+		return round(GetValueRecursiveHelper(cur->children_[0], game_state, character_state));
+	case Expression::ExpressionNode::Type::ROUND_DOWN:
+		return floor(GetValueRecursiveHelper(cur->children_[0], game_state, character_state));
+	case Expression::ExpressionNode::Type::ROUND_UP:
+		return ceil(GetValueRecursiveHelper(cur->children_[0], game_state, character_state));
+	case Expression::ExpressionNode::Type::SQRT:
+		return sqrt(GetValueRecursiveHelper(cur->children_[0], game_state, character_state));
+	case Expression::ExpressionNode::Type::MIN:
+		scratch = GetValueRecursiveHelper(cur->children_[0], game_state, character_state);
+		for (index_scratch = 1; index_scratch < cur->children_.size(); index_scratch++) {
+			scratch = min(scratch, GetValueRecursiveHelper(cur->children_[index_scratch], game_state, character_state));
+		}
+		return scratch;
+	case Expression::ExpressionNode::Type::MAX:
+		scratch = GetValueRecursiveHelper(cur->children_[0], game_state, character_state);
+		for (index_scratch = 1; index_scratch < cur->children_.size(); index_scratch++) {
+			scratch = max(scratch, GetValueRecursiveHelper(cur->children_[index_scratch], game_state, character_state));
+		}
+		return scratch;
+	case Expression::ExpressionNode::Type::TRUE_VALUE:
+		return stod(cur->node_value_);
+	case Expression::ExpressionNode::Type::STATE_VALUE:
+		scratch = 0.0f;
+		if (!character_state.GetValue(game_state, cur->node_value_, scratch)) {
+			// TODO: Try game-state as well then throw exception if that fails too.
+			throw ExpressionError(FormatString("Could not find state value \"%s\" in the game or character state.\n", cur->node_value_), ExpressionError::NONEXISTANT_STATE_VALUE);
+		}
+		return scratch;
+	case Expression::ExpressionNode::Type::INVALID:
+		throw ExpressionError(FormatString("Found invalid node while evaluating expression of name \"%s\".\n", name_), ExpressionError::INVALID_NODE);
 	}
+	throw ExpressionError(FormatString("Found unrecognized node type while evaluating expression of name \"%s\"", name_), ExpressionError::INVALID_NODE);
+}
 
-	return 0.0f;
+float Expression::GetValue(const GameState& game_state, const CharacterState& character_state) const {
+	return GetValueRecursiveHelper(ast_root_, game_state, character_state);
 }
 
 /*
@@ -481,13 +535,34 @@ void Expression::SetExpression(const string& expression)
 	string lowercase_nowhitespace = expression;
 	transform(expression.begin(), expression.end(), lowercase_nowhitespace.begin(), [](unsigned char c) { return std::tolower(c); });
 	lowercase_nowhitespace.erase(remove_if(lowercase_nowhitespace.begin(), lowercase_nowhitespace.end(), isspace), lowercase_nowhitespace.end());
-	ParseAndBuildExpressionTree(lowercase_nowhitespace, ast_root_);
+	ParseAndBuildExpressionTree(lowercase_nowhitespace, ast_root_, number_of_nodes_);
 	PrintTreePretty(ast_root_);
+	printf("Got evaluated value of: %f (assuming all variables are 0.0).\n", GetValue(GameState(), CharacterState()));
 }
 
-float CharacterState::GetValue(const GameState& game_state, const string& value_name) const
+////////////////////
+// CharacterState //
+////////////////////
+
+bool CharacterState::GetValue(const GameState& game_state, const string& value_name, float& result) const
 {
-	return 0.0f;
+	if (cached_expression_vals_.count(value_name) != 0) {
+		// Dumb C++ shenanigans. It won't let me access the map using the operator[] since it could be modified.
+		return (*const_cast<unordered_map<string, float>*>(&cached_expression_vals_))[value_name];
+	}
+	else if (expression_vals_.count(value_name) != 0) {
+		// More shenanigans. Since we are just caching the value, this shouldn't actually count as a state change for character_state
+		(*const_cast<unordered_map<string, float>*>(&cached_expression_vals_))[value_name] = expression_vals_.at(value_name).GetValue(game_state, *this);
+		return (*const_cast<unordered_map<string, float>*>(&cached_expression_vals_))[value_name];
+	}
+	else if (base_vals_.count(value_name) != 0) {
+		// Even more!!
+		return (*const_cast<unordered_map<string, float>*>(&base_vals_))[value_name];
+	}
+	else {
+		return 0.0f;
+	}
+	return true;
 }
 
 const string& CharacterState::GetStringValue(const string& value_name) const

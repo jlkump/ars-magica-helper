@@ -64,16 +64,8 @@ private:
 			TERNERY,
 			INVALID,
 		};
-		//union Value {
-		//	float true_value_;
-		//	string state_value_;
-		//	string operation_value_;
-
-		//	Value() : true_value_(0.0) {}
-		//	~Value() {}
-		//};
 		Type type_;
-		string node_value_;
+		string node_value_; // Union wasn't working out for me, just convert the string to the appropriate type when needed \_(._.)_/
 		vector<ExpressionNode*> children_; // Might move this under the value union in the future.
 	public:
 		ExpressionNode(Type t) : type_(t) {};
@@ -81,6 +73,8 @@ private:
 	};
 	string name_;
 	ExpressionNode* ast_root_; // Abstract Syntax Tree
+	int number_of_nodes_;
+
 	static bool IsValidStringOperation(const string& op);
 	static bool IsValidCharOperation(const char op);
 	static bool IsValidVariableName(const string& var);
@@ -119,15 +113,16 @@ private:
 	* capitalization of the value_names will be set to lowercase with no whitespace. This will
 	* make it easier to compare and use for the player. Thus, CREO EXP would be the same as creoexp.
 	*/
-	static void ParseAndBuildExpressionTree(const string& expression, ExpressionNode*& result);
+	static void ParseAndBuildExpressionTree(const string& expression, ExpressionNode*& result, int& num_tree_nodes);
 
 	/*
 	* Recursive evaluation helper for getting the value of the expression.
 	*/
+	float GetValueRecursiveHelper(const ExpressionNode* cur, const GameState& game_state, const CharacterState& character_state) const;
 
 protected:
 public:
-	Expression(const string& name) : name_(name), ast_root_(nullptr) {}
+	Expression(const string& name) : name_(name), ast_root_(nullptr), number_of_nodes_(0) {}
 
 	/*
 	* Returns the evaluated expression based on the given state. This operation is
@@ -202,10 +197,10 @@ public:
 	/*
 	 * Returns the value of the given value_name which may depend upon the
 	 * current GameState. If the given value is not contained within the
-	 * CharacterState, an exception is thrown. An exception is also thrown
+	 * CharacterState, returns false. An exception is thrown
 	 * if the requested value is actually a string value.
 	 */
-	float GetValue(const GameState& game_state, const string& value_name) const;
+	bool GetValue(const GameState& game_state, const string& value_name, float& result) const;
 
 	/*
 	* Returns the value of the given value_name. There is no dependency on state,
