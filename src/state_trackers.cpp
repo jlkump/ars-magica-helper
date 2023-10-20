@@ -1,58 +1,5 @@
 ﻿#include "state_trackers.hpp"
 
-/*
-* This function will check that the parentheses of a given string are balanced. If they are not,
-* then a SyntaxError of appropriate type will be thrown.
-*/
-void CheckEvenParentheses(const string& expression) {
-	stack<char> s;
-	for (char cur : expression) {
-		// Ignore chars that are not parentheses
-		if (cur != '[' && cur != ']' && cur != '(' && cur != ')' && cur != '{' && cur != '}') {
-			continue;
-		}
-
-		// Put open brackets on the stack
-		if (cur == '[' || cur == '{' || cur == '(') {
-			s.push(cur);
-		} else {
-			if (s.empty()) {
-				// We encountered a closed bracket with no corresponding open bracket.
-				throw SyntaxError(FormatString("Unbalanced parentheses in given expression: \"%s\".\n", expression.c_str()), 
-					SyntaxError::Type::UNBALANCED_PARENTHESES);
-			}
-			char open_brace = s.top();
-			if ((open_brace == '[' && cur != ']') || (open_brace == '{' && cur != '}') || (open_brace == '(' && cur != ')')) {
-				// We encountered the wrong pairing of brackets.
-				throw SyntaxError(
-					FormatString("Parentheses are not ordered correctly in expression: "
-					"\"%s\"\nExpected a closing brace to \'%c\' but found \'%c\' instead.\n", expression.c_str(),
-					open_brace, cur), 
-					SyntaxError::Type::INVALID_ORDERED_PARENTHESES);
-			}
-			// If we get here, everything is OK and we can take the opening bracket off the stack.
-			s.pop();
-		}
-	}
-	if (!s.empty()) {
-		// If we get here, we still have opening brackets that had no closing bracket pair
-		throw SyntaxError(
-			FormatString("Unbalanced parentheses in given expression: \"%s\"\n", expression.c_str()), 
-			SyntaxError::Type::UNBALANCED_PARENTHESES);
-	}
-	// All good, simply exit control flow
-}
-
-void TrimExcessParentheses(string& s) {
-	auto iter = s.begin();
-	auto end = s.end();
-	while (iter < end && *iter == '(' && *(end - 1) == ')') {
-		iter++;
-		end--;
-	}
-	s = string(iter, end);
-}
-
 Expression::ExpressionNode::~ExpressionNode() {
 	for (ExpressionNode* child : this->children_) {
 		delete child;
@@ -354,30 +301,6 @@ void Expression::FindRootOperation(const string& expression, string& operation, 
 	}
 }
 
-bool IsTrueValue(string& s) {
-	int dot_count = 0;
-	for (const char c : s) {
-		if (c == '.') {
-			dot_count++;
-		} else if (!(c >= '0' && c <= '9')) {
-			return false;
-		}
-	}
-	return dot_count < 2;
-}
-
-bool IsStateValue(const string& s) {
-	if (s.begin() == s.end() || *s.begin() != '[' || *(s.end() - 1) != ']') {
-		return false;
-	}
-	
-	int brace_count = 0;
-	for (const char c : s) {
-		if (c == '[') brace_count++;
-	}
-	return brace_count == 1;
-}
-
 /*
 * Given an expression (as defined in state_trackers.hpp), this function will parse the expression,
 * making sure it is in the correct format. If it is, it will build an expression tree which will
@@ -454,7 +377,7 @@ float Expression::GetValueRecursiveHelper(const ExpressionNode* cur, const GameS
 	case Expression::ExpressionNode::Type::DIVISION:
 		scratch = GetValueRecursiveHelper(cur->children_[1], game_state, character_state);
 		if (scratch == 0.0) {
-			throw ExpressionError(FormatString("Divide by zero in expression of name \"%s\".\n", name_), ExpressionError::DIVIDE_BY_ZERO);
+			throw EvaluationError(FormatString("Divide by zero in expression of name \"%s\".\n", name_), EvaluationError::DIVIDE_BY_ZERO);
 		}
 		return GetValueRecursiveHelper(cur->children_[0], game_state, character_state) / scratch;
 	case Expression::ExpressionNode::Type::MULTIPLICATION:
@@ -487,13 +410,13 @@ float Expression::GetValueRecursiveHelper(const ExpressionNode* cur, const GameS
 		scratch = 0.0f;
 		if (!character_state.GetValue(game_state, cur->node_value_, scratch)) {
 			// TODO: Try game-state as well then throw exception if that fails too.
-			throw ExpressionError(FormatString("Could not find state value \"%s\" in the game or character state.\n", cur->node_value_), ExpressionError::NONEXISTANT_STATE_VALUE);
+			throw EvaluationError(FormatString("Could not find state value \"%s\" in the game or character state.\n", cur->node_value_), EvaluationError::NONEXISTANT_STATE_VALUE);
 		}
 		return scratch;
 	case Expression::ExpressionNode::Type::INVALID:
-		throw ExpressionError(FormatString("Found invalid node while evaluating expression of name \"%s\".\n", name_), ExpressionError::INVALID_NODE);
+		throw EvaluationError(FormatString("Found invalid node while evaluating expression of name \"%s\".\n", name_), EvaluationError::INVALID_NODE);
 	}
-	throw ExpressionError(FormatString("Found unrecognized node type while evaluating expression of name \"%s\"", name_), ExpressionError::INVALID_NODE);
+	throw EvaluationError(FormatString("Found unrecognized node type while evaluating expression of name \"%s\"", name_), EvaluationError::INVALID_NODE);
 }
 
 float Expression::GetValue(const GameState& game_state, const CharacterState& character_state) const {
@@ -531,36 +454,39 @@ void Expression::PrintTreePretty(const ExpressionNode* root) {
 
 void Expression::SetExpression(const string& expression)
 {
-	// This to-lowercase-no-whitespace transformation should probably be done before the expression is passed here.
-	string lowercase_nowhitespace = expression;
-	transform(expression.begin(), expression.end(), lowercase_nowhitespace.begin(), [](unsigned char c) { return std::tolower(c); });
-	lowercase_nowhitespace.erase(remove_if(lowercase_nowhitespace.begin(), lowercase_nowhitespace.end(), isspace), lowercase_nowhitespace.end());
-	ParseAndBuildExpressionTree(lowercase_nowhitespace, ast_root_, number_of_nodes_);
-	PrintTreePretty(ast_root_);
-	printf("Got evaluated value of: %f (assuming all variables are 0.0).\n", GetValue(GameState(), CharacterState()));
+	ParseAndBuildExpressionTree(expression, ast_root_, number_of_nodes_);
+	//PrintTreePretty(ast_root_);
 }
 
 ////////////////////
 // CharacterState //
 ////////////////////
+CharacterState::CharacterState() {
+
+}
+
+CharacterState::~CharacterState() {
+
+}
 
 bool CharacterState::GetValue(const GameState& game_state, const string& value_name, float& result) const
 {
 	if (cached_expression_vals_.count(value_name) != 0) {
 		// Dumb C++ shenanigans. It won't let me access the map using the operator[] since it could be modified.
-		return (*const_cast<unordered_map<string, float>*>(&cached_expression_vals_))[value_name];
+		result = (*const_cast<unordered_map<string, float>*>(&cached_expression_vals_))[value_name];
 	}
 	else if (expression_vals_.count(value_name) != 0) {
 		// More shenanigans. Since we are just caching the value, this shouldn't actually count as a state change for character_state
-		(*const_cast<unordered_map<string, float>*>(&cached_expression_vals_))[value_name] = expression_vals_.at(value_name).GetValue(game_state, *this);
-		return (*const_cast<unordered_map<string, float>*>(&cached_expression_vals_))[value_name];
+		// TODO: Update Cache through method
+		(*const_cast<unordered_map<string, float>*>(&cached_expression_vals_))[value_name] = expression_vals_.at(value_name)->GetValue(game_state, *this);
+		result = (*const_cast<unordered_map<string, float>*>(&cached_expression_vals_))[value_name];
 	}
 	else if (base_vals_.count(value_name) != 0) {
 		// Even more!!
-		return (*const_cast<unordered_map<string, float>*>(&base_vals_))[value_name];
+		result = (*const_cast<unordered_map<string, float>*>(&base_vals_))[value_name];
 	}
 	else {
-		return 0.0f;
+		return false;
 	}
 	return true;
 }
@@ -572,14 +498,20 @@ const string& CharacterState::GetStringValue(const string& value_name) const
 
 void CharacterState::SetValue(const string& value_name, const float value)
 {
+	base_vals_[value_name] = value;
 }
 
 void CharacterState::SetValue(const string& value_name, const string& value)
 {
+
 }
 
 void CharacterState::SetExpression(const string& value_name, const string& expression)
 {
+	if (expression_vals_.count(value_name) == 0) {
+		expression_vals_[value_name] = new Expression(value_name);
+	}
+	expression_vals_[value_name]->SetExpression(expression);
 }
 
 void CharacterState::AddCallbackOnValueChange(const string& value_name, void(*callback)(const float))

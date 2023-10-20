@@ -7,9 +7,7 @@
 
 using namespace std;
 
-string FormatString(const char* format ...);
-
-class ExpressionError : public exception {
+class EvaluationError : public exception {
 public:
 	enum Type {
 		NONEXISTANT_STATE_VALUE,
@@ -20,9 +18,9 @@ private:
 	string error_;
 	Type type_;
 public:
-	ExpressionError(const string& error, Type t) : error_(error), type_(t) {}
+	EvaluationError(const string& error, Type t) : error_(error), type_(t) {}
 	virtual const char* what() const noexcept { return error_.c_str(); }
-	ExpressionError::Type GetType() { return type_; }
+	EvaluationError::Type GetType() { return type_; }
 };
 
 class SyntaxError : public exception {

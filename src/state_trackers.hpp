@@ -8,10 +8,10 @@
 #include <stack>
 #include <queue>
 #include <sstream>
-#include <regex>
 #include <iostream>
 
 #include "error.hpp"
+#include "parsing.hpp"
 
 using namespace std;
 
@@ -166,7 +166,7 @@ private:
 	unordered_map<string, float> base_vals_;
 
 	// Maps a given value_name to the associated AST expression
-	unordered_map<string, Expression> expression_vals_;
+	unordered_map<string, Expression*> expression_vals_;
 	unordered_map<string, float> cached_expression_vals_; // Cached for efficiency, updated by dependency graph
 
 	// Maps a value to the list of callback functions it should call when the value is updated.
@@ -193,7 +193,11 @@ private:
 		vector<DependencyNode*> children;
 	};
 	unordered_map<string, DependencyNode*> dependency_graphs_;
+
 public:
+	CharacterState();
+	~CharacterState();
+
 	/*
 	 * Returns the value of the given value_name which may depend upon the
 	 * current GameState. If the given value is not contained within the
