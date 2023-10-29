@@ -611,6 +611,39 @@ void CharacterState::UpdateDependencyGraph(const Expression& expression)
 	}
 }
 
+void CharacterState::UpdateCache(const string& updated_value, const float new_value) {
+	// Whenever we mean to update cache, we have changed the value, so we can call callbacks here.
+	if (callbacks_.count(updated_value) != 0) {
+		for (void(*callback)(const float) : callbacks_[updated_value]) {
+			if (callback != nullptr)
+				callback(new_value);
+		}
+	}
+	if (dependency_graphs_.count(updated_value) == 0) {
+		return;
+	}
+	if (base_vals_.count(updated_value) == 0) {
+		// If not a base value, cache it
+		cached_expression_vals_[updated_value] = new_value;
+	}
+
+	for (const string& child : dependency_graphs_[updated_value]->children_) {
+		// A child dependency should NEVER be a base value. This means the dependency graph is set up wrong
+		if (base_vals_.count(child) != 0) {
+			throw EvaluationError(
+				FormatString("Updated value %s has a dependency of %s. Base values can not depend upon other values.\n",
+				updated_value.c_str(), child.c_str()), EvaluationError::INVERTED_DEPENDENCY);
+		}
+		UpdateCache(child, expression_vals_[child]->GetValue(game_state_, *this));
+	}
+}
+
+// Maybe add a callback for changing string value?
+void CharacterState::AddCallbackOnValueChange(const string& value_name, void(*callback)(const float))
+{
+	callbacks_[value_name].push_back(callback);
+}
+
 void CharacterState::GetPrettyTreeRecursiveHelper(string& result, const string& prefix, const DependencyNode* node, bool end) const {
 	if (node != nullptr)
 	{
@@ -640,31 +673,6 @@ void CharacterState::PrintDependencyGraphPretty(const string& value_name) const 
 	cout << result << endl;
 }
 
-void CharacterState::UpdateCache(const string& updated_value, const float new_value) {
-	if (dependency_graphs_.count(updated_value) == 0) {
-		return;
-	}
-	if (base_vals_.count(updated_value) == 0) {
-		// If not a base value, cache it
-		cached_expression_vals_[updated_value] = new_value;
-	}
-
-	for (const string& child : dependency_graphs_[updated_value]->children_) {
-		// A child dependency should NEVER be a base value. This means the dependency graph is set up wrong
-		if (base_vals_.count(child) != 0) {
-			throw EvaluationError(
-				FormatString("Updated value %s has a dependency of %s. Base values can not depend upon other values.\n",
-				updated_value.c_str(), child.c_str()), EvaluationError::INVERTED_DEPENDENCY);
-		}
-		UpdateCache(child, expression_vals_[child]->GetValue(game_state_, *this));
-	}
-}
-
-void CharacterState::AddCallbackOnValueChange(const string& value_name, void(*callback)(const float))
-{
-	callbacks_[value_name].push_back(callback);
-}
-
 void CharacterState::DebugPrintInfo() const {
 	printf("Base values:\n");
 	for (auto i : base_vals_) {
@@ -685,8 +693,6 @@ void CharacterState::DebugPrintInfo() const {
 		printf("%s: \n%s\n", i.first.c_str(), graph.c_str());
 	}
 }
-
-// Maybe add a callback for changing string value?
 
 
 
