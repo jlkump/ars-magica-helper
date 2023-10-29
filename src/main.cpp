@@ -10,12 +10,17 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <iostream>
+
 // Project Imports
 #include <helpers/RootDir.h>
-
 #include "state_trackers.hpp"
 
-#include <iostream>
+#define DEBUG_TEST
+
+#ifdef DEBUG_TEST
+#include "tests.h"
+#endif
 
 using namespace std;
 
@@ -37,22 +42,13 @@ void parse_expression(const string& s, string& name, string& expression) {
 	expression = string(i + 1, s.end());
 }
 
-bool IsValue(string& s) {
-	int dot_count = 0;
-	for (const char c : s) {
-		if (c == '.') {
-			dot_count++;
-		}
-		else if (!(c >= '0' && c <= '9')) {
-			return false;
-		}
-	}
-	return dot_count < 2;
-}
-
 // Main code
 int main(int, char**)
 {
+#ifdef DEBUG_TEST
+	RunTests();
+	getc(stdin);
+#else
 	string line;
 	string exit = string("exit");
 	CharacterState c = CharacterState();
@@ -68,19 +64,24 @@ int main(int, char**)
 					string name;
 					string expression;
 					parse_expression(lowercase_nowhitespace, name, expression);
-					if (IsValue(expression)) {
+					if (IsTrueValue(expression)) {
 						c.SetValue(name, stod(expression));
-					} else {
+					}
+					else {
 						c.SetExpression(name, expression);
 					}
 					printf("Setting value %s with expression %s\n", name.c_str(), expression.c_str());
+				}
+				else if (*line.begin() == ':') {
+
 				}
 				else {
 					float value;
 					c.GetValue(GameState(), lowercase_nowhitespace, value);
 					printf("Got value for %s as %f\n", line.c_str(), value);
 				}
-			} catch (SyntaxError& e) {
+			}
+			catch (SyntaxError& e) {
 				fprintf(stderr, "Got syntax error: \n%s", e.what());
 			}
 			catch (EvaluationError& e) {
@@ -88,4 +89,6 @@ int main(int, char**)
 			}
 		}
 	} while (line != exit);
+#endif
+
 }

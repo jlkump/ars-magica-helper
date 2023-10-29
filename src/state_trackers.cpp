@@ -225,6 +225,8 @@ void Expression::FindRootOperation(const string& expression, string& operation, 
 		}
 	}
 	if (root_op_index == -1) {
+		// It is possible that an expression equals exactly another expression in this case
+		// Might want to account for that later
 		throw SyntaxError("Expression is poorly formed or not an expression.\n", SyntaxError::Type::ILLFORMED_EXPRESSION);
 	}
 	operation = possible_root_operations[root_op_index];
@@ -310,7 +312,7 @@ void Expression::FindRootOperation(const string& expression, string& operation, 
 * This is an internal helper function that is used for the creation of and modification of the AST
 * of an Expression. For more details, see state_trackers.hpp --> Expression and ExpressionNode definitions.
 */
-void Expression::ParseAndBuildExpressionTree(const string& expression, ExpressionNode*& result, int& num_tree_nodes) {
+void Expression::ParseAndBuildExpressionTree(const string& expression, ExpressionNode*& result) {
 	CheckEvenParentheses(expression); // Will throw a SyntaxError if the values are not equal.
 	CheckValidExpressionOperations(expression); // Will throw a SyntaxError if the operations given are not supported.
 
@@ -335,7 +337,6 @@ void Expression::ParseAndBuildExpressionTree(const string& expression, Expressio
 	}
 	sub_expressions.clear();
 
-	num_tree_nodes = 0;
 	while (!items.empty()) {
 		expression_parse_item current = items.front();
 		TrimExcessParentheses(current.expression);
@@ -362,7 +363,6 @@ void Expression::ParseAndBuildExpressionTree(const string& expression, Expressio
 		}
 		current.parent_of_expression->children_.push_back(child);
 		items.pop();
-		num_tree_nodes++;
 	}
 }
 
@@ -420,43 +420,66 @@ float Expression::GetValueRecursiveHelper(const ExpressionNode* cur, const GameS
 }
 
 float Expression::GetValue(const GameState& game_state, const CharacterState& character_state) const {
-	return GetValueRecursiveHelper(ast_root_, game_state, character_state);
-}
-
-/*
-* Code from https://stackoverflow.com/questions/36802354/print-binary-tree-in-a-pretty-way-using-c
-*/
-void Expression::PrintTreePrettyRecursiveHelper(const std::string& prefix, const ExpressionNode* node, bool end) {
-	if (node != nullptr)
-	{
-		cout << prefix;
-
-		cout << (end ? "|__" : "|__");
-		// print the value of the node
-		if (node->type_ == ExpressionNode::TRUE_VALUE) {
-			std::cout << node->node_value_ << std::endl;
-		} else if (node->type_ == ExpressionNode::STATE_VALUE) {
-			std::cout << node->node_value_ << std::endl;
-		} else {
-			std::cout << node->node_value_ << std::endl;
-		}
-
-		for (int i = 0; i < node->children_.size(); i++) {
-			const ExpressionNode* child = node->children_[i];
-			PrintTreePrettyRecursiveHelper(prefix + (end ? "    " : "|   "), child, i == node->children_.size() - 1);
-		}
+	if (ast_root_ == nullptr) {
+		return 0.0f;
 	}
-}
-
-void Expression::PrintTreePretty(const ExpressionNode* root) {
-	PrintTreePrettyRecursiveHelper("", root, true);
+	return GetValueRecursiveHelper(ast_root_, game_state, character_state);
 }
 
 void Expression::SetExpression(const string& expression)
 {
-	ParseAndBuildExpressionTree(expression, ast_root_, number_of_nodes_);
-	//PrintTreePretty(ast_root_);
+	ParseAndBuildExpressionTree(expression, ast_root_);
+	cout << "Expression Tree" << endl;
+	PrintTreePretty();
 }
+
+/*
+* Code from https://stackoverflow.com/questions/36802354/print-binary-tree-in-a-pretty-way-using-c, slightly modified
+*/
+void Expression::GetPrettyTreeRecursiveHelper(string& result, const string& prefix, const ExpressionNode* node, bool end) {
+	if (node != nullptr)
+	{
+		result.append(prefix);
+		result.append("|__");
+		// print the value of the node
+		result.append(node->node_value_);
+		result.append("\n");
+
+		for (int i = 0; i < node->children_.size(); i++) {
+			const ExpressionNode* child = node->children_[i];
+			GetPrettyTreeRecursiveHelper(result, prefix + (end ? "    " : "|   "), child, i == node->children_.size() - 1);
+		}
+	}
+}
+
+void Expression::PrintTreePretty() const {
+	string result;
+	GetPrettyTreeString(result);
+	cout << result << endl;
+	
+}
+
+void Expression::GetPrettyTreeString(string& result) const {
+	GetPrettyTreeRecursiveHelper(result, "", ast_root_, true);
+}
+
+void Expression::GetStateValuesRecursiveHelper(const ExpressionNode* cur, vector<string>& result) const {
+	if (cur == nullptr) {
+		return;
+	}
+	if (cur->type_ == ExpressionNode::STATE_VALUE) {
+		result.push_back(cur->node_value_);
+	} else if (cur->type_ != ExpressionNode::TRUE_VALUE) {
+		for (const ExpressionNode* c : cur->children_) {
+			GetStateValuesRecursiveHelper(c, result);
+		}
+	}
+}
+
+void Expression::GetStateValues(vector<string>& state_value_names) const {
+	GetStateValuesRecursiveHelper(ast_root_, state_value_names);
+}
+
 
 ////////////////////
 // CharacterState //
@@ -466,7 +489,7 @@ CharacterState::CharacterState() {
 }
 
 CharacterState::~CharacterState() {
-
+	// TODO: delete graphs, expressions, etc.
 }
 
 bool CharacterState::GetValue(const GameState& game_state, const string& value_name, float& result) const
@@ -503,18 +526,115 @@ void CharacterState::SetValue(const string& value_name, const float value)
 
 void CharacterState::SetValue(const string& value_name, const string& value)
 {
-
+	string_vals_[value_name] = value;
 }
 
 void CharacterState::SetExpression(const string& value_name, const string& expression)
 {
 	if (expression_vals_.count(value_name) == 0) {
+		// Add the expression if it doesn't exist yet
 		expression_vals_[value_name] = new Expression(value_name);
 	}
 	expression_vals_[value_name]->SetExpression(expression);
+	// In either case, we must update the expression dependency graph
+	// (This shouldn't ever be a null deref, but maybe it could happen?)
+	UpdateDependencyGraph(*expression_vals_[value_name]);
+}
+
+bool CharacterState::DoesDependencyContainCycleRecursiveHelper(const DependencyNode* cur, unordered_set<string>& visited, unordered_set<string>& on_stack) const {
+	if (on_stack.count(cur->name_) >= 1) {
+		return true;
+	}
+	if (visited.count(cur->name_) >= 1) {
+		return false;
+	}
+
+	visited.insert(cur->name_);
+	on_stack.insert(cur->name_);
+	for (const DependencyNode* c : cur->children_) {
+		if (DoesDependencyContainCycleRecursiveHelper(c, visited, on_stack)) {
+			return true;
+		}
+	}
+	on_stack.erase(cur->name_);
+	return false;
+}
+
+bool CharacterState::DoesDependencyContainCycle(const DependencyNode* current) const {
+	unordered_set<string> visited;
+	unordered_set<string> on_stack;
+	return DoesDependencyContainCycleRecursiveHelper(current, visited, on_stack);
+}
+
+void CharacterState::UpdateDependencyGraph(const Expression& expression) 
+{
+	if (dependency_graphs_.count(expression.GetName()) == 0) {
+		// Create new dependency graph
+		dependency_graphs_[expression.GetName()] = new DependencyNode();
+		dependency_graphs_[expression.GetName()]->name_ = expression.GetName();
+	}
+	vector<string> state_names;
+	vector<string> undo_dependencies;
+	unordered_map<string, vector<CharacterState::DependencyNode*>::const_iterator> undos;
+	expression.GetStateValues(state_names);
+	for (const string& name : state_names) {
+		if (dependency_graphs_.count(name) == 0) {
+			// Create new dependency graph
+			dependency_graphs_[name] = new DependencyNode();
+			dependency_graphs_[name]->name_ = name;
+			undo_dependencies.push_back(name);
+		}
+		dependency_graphs_[name]->children_.push_back(dependency_graphs_[expression.GetName()]);
+		undos[name] = (dependency_graphs_[name]->children_.end() - 1);
+	}
+	// Now detect if there is a cycle and undo if there is
+	if (DoesDependencyContainCycle(dependency_graphs_[expression.GetName()])) {
+		// TODO: Keep track of graphs to undo
+		for (const string& name : state_names) {
+			dependency_graphs_[name]->children_.erase(undos[name]);
+		}
+		for (const string& undo_name : undo_dependencies) {
+			delete dependency_graphs_[undo_name];
+			dependency_graphs_.erase(undo_name);
+		}
+		dependency_graphs_.erase(expression.GetName());
+		throw SyntaxError(FormatString("Expression %s has a cyclic dependency.\n", expression.GetName().c_str()), SyntaxError::CYCLIC_DEPENDENCY);
+	}
+	PrintDependencyGraphPretty(expression.GetName());
+}
+
+void CharacterState::GetPrettyTreeRecursiveHelper(string& result, const string& prefix, const DependencyNode* node, bool end) const {
+	if (node != nullptr)
+	{
+		result.append(prefix);
+		result.append("|__");
+		// print the value of the node
+		result.append(node->name_);
+		result.append("\n");
+
+		for (int i = 0; i < node->children_.size(); i++) {
+			const DependencyNode* child = node->children_[i];
+			GetPrettyTreeRecursiveHelper(result, prefix + (end ? "    " : "|   "), child, i == node->children_.size() - 1);
+		}
+	}
+}
+
+void CharacterState::GetPrettyTreeString(string& result, const string& value_name) const {
+	if (dependency_graphs_.count(value_name) == 0) {
+		return;
+	}
+	GetPrettyTreeRecursiveHelper(result, "", dependency_graphs_.at(value_name), true);
+}
+
+void CharacterState::PrintDependencyGraphPretty(const string& value_name) const {
+	string result;
+	GetPrettyTreeString(result, value_name);
+	cout << result << endl;
 }
 
 void CharacterState::AddCallbackOnValueChange(const string& value_name, void(*callback)(const float))
 {
-
+	callbacks_[value_name].push_back(callback);
 }
+
+// Maybe add a callback for changing string value?

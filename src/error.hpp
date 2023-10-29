@@ -35,6 +35,7 @@ public:
 		EMPTY_OPERATION,		     // Ex:	   sqrt()
 		INVALID_NUMBER_FORMAT,       // Ex:    8.0.0 or 8e324a33 or 0x10AD3
 		FORMAT_STRING_ERROR,         // Ex:    passing in "%" instaed of "%%"
+		CYCLIC_DEPENDENCY,
 	};
 private:
 	string error_;

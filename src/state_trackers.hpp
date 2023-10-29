@@ -9,6 +9,7 @@
 #include <queue>
 #include <sstream>
 #include <iostream>
+#include <unordered_set>
 
 #include "error.hpp"
 #include "parsing.hpp"
@@ -36,13 +37,6 @@ class Expression;
  * return 3.0 at the "Creo Exp" value of 7.0, but return 4.0 when "Creo Exp" was
  * updated to 10.0.
  */
-
-class GameState {
-private:
-protected:
-public:
-	unordered_map<string, float> state_;
-};
 
 class Expression {
 private:
@@ -73,19 +67,12 @@ private:
 	};
 	string name_;
 	ExpressionNode* ast_root_; // Abstract Syntax Tree
-	int number_of_nodes_;
 
 	static bool IsValidStringOperation(const string& op);
 	static bool IsValidCharOperation(const char op);
 	static bool IsValidVariableName(const string& var);
 	static int GetOperationPrecedence(const string& op);
 	static Expression::ExpressionNode::Type GetOperationNodeType(const string& op);
-
-
-	// Debugging helper
-	static void PrintTreePrettyRecursiveHelper(const std::string& prefix, const ExpressionNode* node, bool end);
-	static void PrintTreePretty(const ExpressionNode* root);
-
 
 	/*
 	* This function checks that an expression string uses valid format and will throw a
@@ -103,6 +90,7 @@ private:
 	* sub-expression list.
 	*/
 	static void FindRootOperation(const string& expression, string& operation, vector<string>& subexpressions);
+
 	/*
 	* This will actually parse the expression string given. The current syntax I have in
 	* mind looks something like the following:
@@ -113,16 +101,19 @@ private:
 	* capitalization of the value_names will be set to lowercase with no whitespace. This will
 	* make it easier to compare and use for the player. Thus, CREO EXP would be the same as creoexp.
 	*/
-	static void ParseAndBuildExpressionTree(const string& expression, ExpressionNode*& result, int& num_tree_nodes);
+	static void ParseAndBuildExpressionTree(const string& expression, ExpressionNode*& result);
 
 	/*
 	* Recursive evaluation helper for getting the value of the expression.
 	*/
 	float GetValueRecursiveHelper(const ExpressionNode* cur, const GameState& game_state, const CharacterState& character_state) const;
+	// Debugging helper
+	static void GetPrettyTreeRecursiveHelper(string& result, const string& prefix, const ExpressionNode* node, bool end);
 
-protected:
+	void GetStateValuesRecursiveHelper(const ExpressionNode* cur, vector<string>& result) const;
+
 public:
-	Expression(const string& name) : name_(name), ast_root_(nullptr), number_of_nodes_(0) {}
+	Expression(const string& name) : name_(name), ast_root_(nullptr) {}
 
 	/*
 	* Returns the evaluated expression based on the given state. This operation is
@@ -134,6 +125,11 @@ public:
 	float GetValue(const GameState& game_state, const CharacterState& character_state) const;
 
 	/*
+	* Simple getter for the expression's name
+	*/
+	inline const string& GetName() const { return name_; }
+
+	/*
 	* This will parse the given expression into the appropriate Abstract Syntax Tree for
 	* the expression to keep track of. This must be called at least once with valid
 	* syntax for the expression to be valid.
@@ -141,10 +137,23 @@ public:
 	* If the given expression string is not valid, the method will throw an exception.
 	*/
 	void SetExpression(const string& expression);
+
+	/*
+	* Modifies the given list, adding the state-values this expression contains.
+	* This is the list of all values this expression needs to get to evaluate.
+	* For example, Creo has a state value of CreoExp.
+	*/
+	void GetStateValues(vector<string>& state_value_names) const;
+
+	/*
+	* A simple debugging helper to see the structure of the expression
+	*/
+	void PrintTreePretty() const;
+	void GetPrettyTreeString(string& result) const;
 };
 
 ////////////////////////////////////////////
-///////////// CharacterState ///////////////
+//             CharacterState             //
 ////////////////////////////////////////////
 
 /*
@@ -180,19 +189,29 @@ private:
 	// a DAG (Directed Acyclic Graph).
 	// Example Graph for Creo Exp:
 	//
-	//            Creo Exp
-	//               |
-	//               \/
+	//             Creo Exp
+	//                |
+	//               \ /
 	//              Creo
 	//            /       \ 
-	//          /          \ 
-	//         \/          \/
+	//           /         \ 
+	//          \/         \/
 	//   Cr*LabTotal   Cr*CastingScore
+
 	struct DependencyNode {
-		string name;
-		vector<DependencyNode*> children;
+		string name_;
+		vector<DependencyNode*> children_;
 	};
 	unordered_map<string, DependencyNode*> dependency_graphs_;
+	bool DoesDependencyContainCycleRecursiveHelper(const DependencyNode* cur, unordered_set<string>& visited, unordered_set<string>& on_stack) const;
+	bool DoesDependencyContainCycle(const DependencyNode* current) const;
+	void UpdateDependencyGraph(const Expression& expression);
+
+
+
+	void PrintDependencyGraphPretty(const string& value_name) const;
+	void GetPrettyTreeRecursiveHelper(string& result, const string& prefix, const DependencyNode* node, bool end) const;
+	void GetPrettyTreeString(string& result, const string& value_name) const;
 
 public:
 	CharacterState();
@@ -248,6 +267,16 @@ public:
 	* that value with SetValue();
 	*/
 	void AddCallbackOnValueChange(const string& value_name, void(*callback_function)(const float));
+};
+
+////////////////////////////////////////////
+//             GameState                  //
+////////////////////////////////////////////
+class GameState {
+private:
+protected:
+public:
+	unordered_map<string, float> state_;
 };
 
 #endif
