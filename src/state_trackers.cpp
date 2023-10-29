@@ -668,15 +668,15 @@ void CharacterState::AddCallbackOnValueChange(const string& value_name, void(*ca
 void CharacterState::DebugPrintInfo() const {
 	printf("Base values:\n");
 	for (auto i : base_vals_) {
-		printf("%+10s: %3.3f\n", i.first.c_str(), i.second);
+		printf("%-10s: %3.3f\n", i.first.c_str(), i.second);
 	}
 	printf("Expression values:\n");
 	for (auto i : expression_vals_) {
-		printf("%+10s: %3.3f\n", i.first.c_str(), i.second->GetValue(game_state_, *this));
+		printf("%-10s: %3.3f\n", i.first.c_str(), i.second->GetValue(game_state_, *this));
 	}
 	printf("Cached Values:\n");
 	for (auto i : cached_expression_vals_) {
-		printf("%+10s: %3.3f\n", i.first.c_str(), i.second);
+		printf("%-10s: %3.3f\n", i.first.c_str(), i.second);
 	}
 	printf("Dependency Graphs: (These are the things that are updated when the value given is updated)\n");
 	for (auto i : dependency_graphs_) {

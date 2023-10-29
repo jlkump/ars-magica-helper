@@ -1,0 +1,9 @@
+creoexp=10
+aquaexp=20
+creo=rounddown((sqrt(8*[creoexp]+1)-1)/2)
+aqua=rounddown((sqrt(8*[aquaexp]+1)-1)/2)
+labaura=1
+Magic Theory Exp=102
+Magic Theory = rounddown((sqrt(8*[Magic Theory Exp] / 5 +1)-1)/2)
+int=1
+CrAqLabTotal=[creo]+[aqua]+[Magic Theory]+[int]+[labaura]

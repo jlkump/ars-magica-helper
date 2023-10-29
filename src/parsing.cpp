@@ -1,7 +1,10 @@
 #include "parsing.hpp"
 
+#include "state_trackers.hpp"
+
 #include <stack>
 #include <string>
+#include <fstream>
 
 /*
 * This function will check that the parentheses of a given string are balanced. If they are not,
@@ -130,4 +133,60 @@ string FormatString(const char* format ...)
 	}
 
 	return result;
+}
+
+bool ContainsEqual(const string& s) {
+	for (const char c : s) {
+		if (c == '=') {
+			return true;
+		}
+	}
+	return false;
+}
+
+void ParseExpression(const string& s, string& name, string& expression) {
+	auto i = s.begin();
+	while (i != s.end() && *i != '=') {
+		i++;
+	}
+	name = string(s.begin(), i);
+	expression = string(i + 1, s.end());
+}
+
+
+bool CreateCharacterFromPlainTextFile(const char* file_path, CharacterState& character) {
+	if (file_path == nullptr) {
+		return false;
+	}
+
+	ifstream input_file(file_path);
+	if (!input_file.is_open()) {
+		return false;
+	}
+	string line;
+	while (getline(input_file, line)) {
+		try {
+			// This to-lowercase-no-whitespace transformation should probably be done before the expression is passed here.
+			string lowercase_nowhitespace = line;
+			transform(line.begin(), line.end(), lowercase_nowhitespace.begin(), [](unsigned char c) { return std::tolower(c); });
+			lowercase_nowhitespace.erase(remove_if(lowercase_nowhitespace.begin(), lowercase_nowhitespace.end(), isspace), lowercase_nowhitespace.end());
+			if (ContainsEqual(lowercase_nowhitespace)) {
+				string name;
+				string expression;
+				ParseExpression(lowercase_nowhitespace, name, expression);
+				if (IsTrueValue(expression)) {
+					character.SetValue(name, stod(expression));
+				}
+				else {
+					character.SetExpression(name, expression);
+				}
+			}
+		}
+		catch (SyntaxError& e) {
+			fprintf(stderr, "Got syntax error reading file %s: \n%s", file_path, e.what());
+		}
+		catch (EvaluationError& e) {
+			fprintf(stderr, "Got evaluation error reading file %s: \n%s", file_path, e.what());
+		}
+	}
 }
