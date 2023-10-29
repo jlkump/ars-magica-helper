@@ -200,21 +200,27 @@ private:
 
 	struct DependencyNode {
 		string name_;
-		vector<DependencyNode*> children_;
+		vector<string> children_;
+	public:
+		DependencyNode(const string& name) : name_(name) {}
+		~DependencyNode() {}
 	};
 	unordered_map<string, DependencyNode*> dependency_graphs_;
-	bool DoesDependencyContainCycleRecursiveHelper(const DependencyNode* cur, unordered_set<string>& visited, unordered_set<string>& on_stack) const;
-	bool DoesDependencyContainCycle(const DependencyNode* current) const;
+
+	const GameState& game_state_;
+
+	bool DoesDependencyContainCycleRecursiveHelper(const DependencyNode* cur, unordered_set<string>& visited, unordered_set<string>& on_stack, const unordered_map<string, DependencyNode*>& graph) const;
+	bool DoesDependencyContainCycle(const DependencyNode* current, const unordered_map<string, DependencyNode*> graph) const;
 	void UpdateDependencyGraph(const Expression& expression);
 
-
+	void UpdateCache(const string& updated_value, const float new_value);
 
 	void PrintDependencyGraphPretty(const string& value_name) const;
 	void GetPrettyTreeRecursiveHelper(string& result, const string& prefix, const DependencyNode* node, bool end) const;
 	void GetPrettyTreeString(string& result, const string& value_name) const;
 
 public:
-	CharacterState();
+	CharacterState(const GameState& game_state) : game_state_(game_state) {}
 	~CharacterState();
 
 	/*
@@ -223,7 +229,7 @@ public:
 	 * CharacterState, returns false. An exception is thrown
 	 * if the requested value is actually a string value.
 	 */
-	bool GetValue(const GameState& game_state, const string& value_name, float& result) const;
+	bool GetValue(const string& value_name, float& result) const;
 
 	/*
 	* Returns the value of the given value_name. There is no dependency on state,
@@ -267,6 +273,8 @@ public:
 	* that value with SetValue();
 	*/
 	void AddCallbackOnValueChange(const string& value_name, void(*callback_function)(const float));
+
+	void DebugPrintInfo() const;
 };
 
 ////////////////////////////////////////////
@@ -274,9 +282,11 @@ public:
 ////////////////////////////////////////////
 class GameState {
 private:
+	unordered_map<string, float> state_;
 protected:
 public:
-	unordered_map<string, float> state_;
+	bool GetValue(const string& value_name, float& result) const;
+
 };
 
 #endif

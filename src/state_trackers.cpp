@@ -408,15 +408,18 @@ float Expression::GetValueRecursiveHelper(const ExpressionNode* cur, const GameS
 		return stod(cur->node_value_);
 	case Expression::ExpressionNode::Type::STATE_VALUE:
 		scratch = 0.0f;
-		if (!character_state.GetValue(game_state, cur->node_value_, scratch)) {
+		if (!character_state.GetValue(cur->node_value_, scratch) && !game_state.GetValue(cur->node_value_, scratch)) {
 			// TODO: Try game-state as well then throw exception if that fails too.
-			throw EvaluationError(FormatString("Could not find state value \"%s\" in the game or character state.\n", cur->node_value_), EvaluationError::NONEXISTANT_STATE_VALUE);
+			throw EvaluationError(FormatString("Could not find state value \"%s\" in the game or character state.\n", 
+				cur->node_value_.c_str()), EvaluationError::NONEXISTANT_STATE_VALUE);
 		}
 		return scratch;
 	case Expression::ExpressionNode::Type::INVALID:
-		throw EvaluationError(FormatString("Found invalid node while evaluating expression of name \"%s\".\n", name_), EvaluationError::INVALID_NODE);
+		throw EvaluationError(FormatString("Found invalid node while evaluating expression of name \"%s\".\n", 
+			name_.c_str()), EvaluationError::INVALID_NODE);
 	}
-	throw EvaluationError(FormatString("Found unrecognized node type while evaluating expression of name \"%s\"", name_), EvaluationError::INVALID_NODE);
+	throw EvaluationError(FormatString("Found unrecognized node type while evaluating expression of name \"%s\"", 
+		name_.c_str()), EvaluationError::INVALID_NODE);
 }
 
 float Expression::GetValue(const GameState& game_state, const CharacterState& character_state) const {
@@ -484,30 +487,25 @@ void Expression::GetStateValues(vector<string>& state_value_names) const {
 ////////////////////
 // CharacterState //
 ////////////////////
-CharacterState::CharacterState() {
-
-}
-
 CharacterState::~CharacterState() {
 	// TODO: delete graphs, expressions, etc.
 }
 
-bool CharacterState::GetValue(const GameState& game_state, const string& value_name, float& result) const
+bool CharacterState::GetValue(const string& value_name, float& result) const
 {
-	if (cached_expression_vals_.count(value_name) != 0) {
+	if (base_vals_.count(value_name) != 0) {
+		result = (*const_cast<unordered_map<string, float>*>(&base_vals_))[value_name];
+	}
+	else if (cached_expression_vals_.count(value_name) != 0) {
 		// Dumb C++ shenanigans. It won't let me access the map using the operator[] since it could be modified.
 		result = (*const_cast<unordered_map<string, float>*>(&cached_expression_vals_))[value_name];
 	}
-	else if (expression_vals_.count(value_name) != 0) {
-		// More shenanigans. Since we are just caching the value, this shouldn't actually count as a state change for character_state
-		// TODO: Update Cache through method
-		(*const_cast<unordered_map<string, float>*>(&cached_expression_vals_))[value_name] = expression_vals_.at(value_name)->GetValue(game_state, *this);
-		result = (*const_cast<unordered_map<string, float>*>(&cached_expression_vals_))[value_name];
-	}
-	else if (base_vals_.count(value_name) != 0) {
-		// Even more!!
-		result = (*const_cast<unordered_map<string, float>*>(&base_vals_))[value_name];
-	}
+	//else if (expression_vals_.count(value_name) != 0) {
+	//	// More shenanigans. Since we are just caching the value, this shouldn't actually count as a state change for character_state
+	//	// TODO: Update Cache through method
+	//	(*const_cast<unordered_map<string, float>*>(&cached_expression_vals_))[value_name] = expression_vals_.at(value_name)->GetValue(game_state_, *this);
+	//	result = (*const_cast<unordered_map<string, float>*>(&cached_expression_vals_))[value_name];
+	//}
 	else {
 		return false;
 	}
@@ -522,6 +520,7 @@ const string& CharacterState::GetStringValue(const string& value_name) const
 void CharacterState::SetValue(const string& value_name, const float value)
 {
 	base_vals_[value_name] = value;
+	UpdateCache(value_name, value);
 }
 
 void CharacterState::SetValue(const string& value_name, const string& value)
@@ -531,17 +530,25 @@ void CharacterState::SetValue(const string& value_name, const string& value)
 
 void CharacterState::SetExpression(const string& value_name, const string& expression)
 {
-	if (expression_vals_.count(value_name) == 0) {
-		// Add the expression if it doesn't exist yet
-		expression_vals_[value_name] = new Expression(value_name);
+	Expression* possible_expression = new Expression(value_name);
+	possible_expression->SetExpression(expression);
+	try {
+		UpdateDependencyGraph(*possible_expression);
 	}
-	expression_vals_[value_name]->SetExpression(expression);
-	// In either case, we must update the expression dependency graph
-	// (This shouldn't ever be a null deref, but maybe it could happen?)
-	UpdateDependencyGraph(*expression_vals_[value_name]);
+	catch (SyntaxError& e) {
+		if (e.GetType() == SyntaxError::CYCLIC_DEPENDENCY) {
+			delete possible_expression;
+		}
+		throw e;
+	}
+	if (expression_vals_.count(value_name) != 0 && expression_vals_[value_name] != nullptr) {
+		delete expression_vals_[value_name];
+	}
+	expression_vals_[value_name] = possible_expression;
+	UpdateCache(value_name, expression_vals_[value_name]->GetValue(game_state_, *this));
 }
 
-bool CharacterState::DoesDependencyContainCycleRecursiveHelper(const DependencyNode* cur, unordered_set<string>& visited, unordered_set<string>& on_stack) const {
+bool CharacterState::DoesDependencyContainCycleRecursiveHelper(const DependencyNode* cur, unordered_set<string>& visited, unordered_set<string>& on_stack, const unordered_map<string, DependencyNode*>& graph) const {
 	if (on_stack.count(cur->name_) >= 1) {
 		return true;
 	}
@@ -551,8 +558,8 @@ bool CharacterState::DoesDependencyContainCycleRecursiveHelper(const DependencyN
 
 	visited.insert(cur->name_);
 	on_stack.insert(cur->name_);
-	for (const DependencyNode* c : cur->children_) {
-		if (DoesDependencyContainCycleRecursiveHelper(c, visited, on_stack)) {
+	for (const string& c : cur->children_) {
+		if (DoesDependencyContainCycleRecursiveHelper(graph.at(c), visited, on_stack, graph)) {
 			return true;
 		}
 	}
@@ -560,45 +567,58 @@ bool CharacterState::DoesDependencyContainCycleRecursiveHelper(const DependencyN
 	return false;
 }
 
-bool CharacterState::DoesDependencyContainCycle(const DependencyNode* current) const {
+bool CharacterState::DoesDependencyContainCycle(const DependencyNode* current, const unordered_map<string, DependencyNode*> graph) const {
 	unordered_set<string> visited;
 	unordered_set<string> on_stack;
-	return DoesDependencyContainCycleRecursiveHelper(current, visited, on_stack);
+	return DoesDependencyContainCycleRecursiveHelper(current, visited, on_stack, graph);
 }
 
 void CharacterState::UpdateDependencyGraph(const Expression& expression) 
 {
-	if (dependency_graphs_.count(expression.GetName()) == 0) {
-		// Create new dependency graph
-		dependency_graphs_[expression.GetName()] = new DependencyNode();
-		dependency_graphs_[expression.GetName()]->name_ = expression.GetName();
+	printf("Updating dependency graph for expression %s\n", expression.GetName().c_str());
+	unordered_map<string, DependencyNode*> sub_graph;
+	DependencyNode* expression_dependency_leaf = new DependencyNode(expression.GetName());
+	if (dependency_graphs_.count(expression.GetName()) != 0) {
+		expression_dependency_leaf->children_ = dependency_graphs_[expression.GetName()]->children_;
+		sub_graph[expression.GetName()] = expression_dependency_leaf;
+		printf("Found existing children:\n");
+		for (string& child : expression_dependency_leaf->children_) {
+			printf("%10s\n", child.c_str());
+		}
 	}
 	vector<string> state_names;
-	vector<string> undo_dependencies;
-	unordered_map<string, vector<CharacterState::DependencyNode*>::const_iterator> undos;
 	expression.GetStateValues(state_names);
+	vector<DependencyNode*> new_dependencies;
 	for (const string& name : state_names) {
-		if (dependency_graphs_.count(name) == 0) {
-			// Create new dependency graph
-			dependency_graphs_[name] = new DependencyNode();
-			dependency_graphs_[name]->name_ = name;
-			undo_dependencies.push_back(name);
+		DependencyNode* new_dep = new DependencyNode(name);
+		if (dependency_graphs_.count(name) != 0) {
+			new_dep->children_ = dependency_graphs_[name]->children_;
 		}
-		dependency_graphs_[name]->children_.push_back(dependency_graphs_[expression.GetName()]);
-		undos[name] = (dependency_graphs_[name]->children_.end() - 1);
+		printf("Parents new children:\n");
+		new_dep->children_.push_back(expression_dependency_leaf->name_);
+		for (string& child : new_dep->children_) {
+			printf("%10s\n", child.c_str());
+		}
+		new_dependencies.push_back(new_dep);
+		sub_graph[name] = new_dep;
 	}
+
 	// Now detect if there is a cycle and undo if there is
-	if (DoesDependencyContainCycle(dependency_graphs_[expression.GetName()])) {
-		// TODO: Keep track of graphs to undo
-		for (const string& name : state_names) {
-			dependency_graphs_[name]->children_.erase(undos[name]);
+	if (DoesDependencyContainCycle(expression_dependency_leaf, sub_graph)) {
+		delete expression_dependency_leaf;
+		for (DependencyNode* n : new_dependencies) {
+			delete n;
 		}
-		for (const string& undo_name : undo_dependencies) {
-			delete dependency_graphs_[undo_name];
-			dependency_graphs_.erase(undo_name);
-		}
-		dependency_graphs_.erase(expression.GetName());
 		throw SyntaxError(FormatString("Expression %s has a cyclic dependency.\n", expression.GetName().c_str()), SyntaxError::CYCLIC_DEPENDENCY);
+	}
+	// We know there is no cycle, now we can safely update the dependency graph with no downsides
+	delete dependency_graphs_[expression.GetName()];
+	dependency_graphs_[expression.GetName()] = expression_dependency_leaf;
+	for (DependencyNode* updated_parent : new_dependencies) {
+		if (dependency_graphs_.count(updated_parent->name_) != 0) {
+			delete dependency_graphs_[updated_parent->name_];
+		}
+		dependency_graphs_[updated_parent->name_] = updated_parent;
 	}
 	PrintDependencyGraphPretty(expression.GetName());
 }
@@ -607,13 +627,13 @@ void CharacterState::GetPrettyTreeRecursiveHelper(string& result, const string& 
 	if (node != nullptr)
 	{
 		result.append(prefix);
-		result.append("|__");
+		result.append("|_>");
 		// print the value of the node
 		result.append(node->name_);
 		result.append("\n");
 
 		for (int i = 0; i < node->children_.size(); i++) {
-			const DependencyNode* child = node->children_[i];
+			const DependencyNode* child = dependency_graphs_.at(node->children_[i]);
 			GetPrettyTreeRecursiveHelper(result, prefix + (end ? "    " : "|   "), child, i == node->children_.size() - 1);
 		}
 	}
@@ -632,9 +652,60 @@ void CharacterState::PrintDependencyGraphPretty(const string& value_name) const 
 	cout << result << endl;
 }
 
+void CharacterState::UpdateCache(const string& updated_value, const float new_value) {
+	if (dependency_graphs_.count(updated_value) == 0) {
+		return;
+	}
+	if (base_vals_.count(updated_value) == 0) {
+		// If not a base value, cache it
+		cached_expression_vals_[updated_value] = new_value;
+	}
+
+	for (const string& child : dependency_graphs_[updated_value]->children_) {
+		// A child dependency should NEVER be a base value. This means the dependency graph is set up wrong
+		if (base_vals_.count(child) != 0) {
+			throw EvaluationError(
+				FormatString("Updated value %s has a dependency of %s. Base values can not depend upon other values.\n",
+				updated_value.c_str(), child.c_str()), EvaluationError::INVERTED_DEPENDENCY);
+		}
+		UpdateCache(child, expression_vals_[child]->GetValue(game_state_, *this));
+	}
+}
+
 void CharacterState::AddCallbackOnValueChange(const string& value_name, void(*callback)(const float))
 {
 	callbacks_[value_name].push_back(callback);
 }
 
+void CharacterState::DebugPrintInfo() const {
+	printf("Base values:\n");
+	for (auto i : base_vals_) {
+		printf("%+10s: %3.3f\n", i.first.c_str(), i.second);
+	}
+	printf("Expression values:\n");
+	for (auto i : expression_vals_) {
+		printf("%+10s: %3.3f\n", i.first.c_str(), i.second->GetValue(game_state_, *this));
+	}
+	printf("Cached Values:\n");
+	for (auto i : cached_expression_vals_) {
+		printf("%+10s: %3.3f\n", i.first.c_str(), i.second);
+	}
+	printf("Dependency Graphs: (These are the things that are updated when the value given is updated)\n");
+	for (auto i : dependency_graphs_) {
+		string graph;
+		GetPrettyTreeString(graph, i.second->name_);
+		printf("%s: \n%s\n", i.first.c_str(), graph.c_str());
+	}
+}
+
 // Maybe add a callback for changing string value?
+
+
+
+////////////////////////////////////////////
+//             GameState                  //
+////////////////////////////////////////////
+bool GameState::GetValue(const string& value_name, float& result) const {
+	result = 0.0f;
+	return false;
+}

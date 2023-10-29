@@ -13,6 +13,7 @@ public:
 		NONEXISTANT_STATE_VALUE,
 		INVALID_NODE,
 		DIVIDE_BY_ZERO,
+		INVERTED_DEPENDENCY,
 	};
 private:
 	string error_;

@@ -16,7 +16,7 @@
 #include <helpers/RootDir.h>
 #include "state_trackers.hpp"
 
-#define DEBUG_TEST
+//#define DEBUG_TEST
 
 #ifdef DEBUG_TEST
 #include "tests.h"
@@ -51,7 +51,8 @@ int main(int, char**)
 #else
 	string line;
 	string exit = string("exit");
-	CharacterState c = CharacterState();
+	GameState g = GameState();
+	CharacterState c = CharacterState(g);
 	do {
 		getline(cin, line);
 		if (line != exit) {
@@ -77,9 +78,10 @@ int main(int, char**)
 				}
 				else {
 					float value;
-					c.GetValue(GameState(), lowercase_nowhitespace, value);
+					c.GetValue(lowercase_nowhitespace, value);
 					printf("Got value for %s as %f\n", line.c_str(), value);
 				}
+				c.DebugPrintInfo();
 			}
 			catch (SyntaxError& e) {
 				fprintf(stderr, "Got syntax error: \n%s", e.what());
