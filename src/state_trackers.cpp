@@ -432,8 +432,6 @@ float Expression::GetValue(const GameState& game_state, const CharacterState& ch
 void Expression::SetExpression(const string& expression)
 {
 	ParseAndBuildExpressionTree(expression, ast_root_);
-	cout << "Expression Tree" << endl;
-	PrintTreePretty();
 }
 
 /*
@@ -575,16 +573,11 @@ bool CharacterState::DoesDependencyContainCycle(const DependencyNode* current, c
 
 void CharacterState::UpdateDependencyGraph(const Expression& expression) 
 {
-	printf("Updating dependency graph for expression %s\n", expression.GetName().c_str());
 	unordered_map<string, DependencyNode*> sub_graph;
 	DependencyNode* expression_dependency_leaf = new DependencyNode(expression.GetName());
 	if (dependency_graphs_.count(expression.GetName()) != 0) {
 		expression_dependency_leaf->children_ = dependency_graphs_[expression.GetName()]->children_;
 		sub_graph[expression.GetName()] = expression_dependency_leaf;
-		printf("Found existing children:\n");
-		for (string& child : expression_dependency_leaf->children_) {
-			printf("%10s\n", child.c_str());
-		}
 	}
 	vector<string> state_names;
 	expression.GetStateValues(state_names);
@@ -594,11 +587,7 @@ void CharacterState::UpdateDependencyGraph(const Expression& expression)
 		if (dependency_graphs_.count(name) != 0) {
 			new_dep->children_ = dependency_graphs_[name]->children_;
 		}
-		printf("Parents new children:\n");
 		new_dep->children_.push_back(expression_dependency_leaf->name_);
-		for (string& child : new_dep->children_) {
-			printf("%10s\n", child.c_str());
-		}
 		new_dependencies.push_back(new_dep);
 		sub_graph[name] = new_dep;
 	}
@@ -620,7 +609,6 @@ void CharacterState::UpdateDependencyGraph(const Expression& expression)
 		}
 		dependency_graphs_[updated_parent->name_] = updated_parent;
 	}
-	PrintDependencyGraphPretty(expression.GetName());
 }
 
 void CharacterState::GetPrettyTreeRecursiveHelper(string& result, const string& prefix, const DependencyNode* node, bool end) const {
