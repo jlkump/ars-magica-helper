@@ -232,11 +232,33 @@ public:
 ////////////////////////////////////////////
 
 /*
-* This class will track all things related to character state, including the database
-* of string -> value pairs that exist in tabletop RPGs like Ars Magica. Specifically,
-* this class will store:
-*  - Strings in the string_vals_ variable (Stores notes, descriptions, etc.)
-*  - Values in the base_vals_ and expression_vals_ variables (Arts, Abilities, Exp, Seasonal progress points, etc.)
+* This class tracks all things related to character state in the tabletop rpg Ars Magica
+* (However, this system is extensible to build ontop of existing game rules)
+* 
+* CharacterState contains notes, values, season timeline of events, 
+* laboratory and inventory management.
+* 
+* Note how values are refered to in this code base:
+*	  - base value: a base value is some value such as 
+*		experience, which is defined as a single value, but may change over the course of the game.
+* 
+*	  - expression value: an expression value refers to other values within the 
+*		character and possibly the game state as well. It can perform any arbitrary
+*		operations on these values, but can be evaluated to a single value given
+*		all necessary values it relys on for computation.
+* 
+*	  - true value: In the context of an expression, a true value will
+*		remain the same no matter the situation of the game state or character state.
+*		This value is entirely static and hard-coded into the expression itself.
+* 
+*	  - state value: This value is not known by the expression and is referenced somewhere
+*		in either the character state or game state. As such, base values and expression
+*		values are also state values.
+* 
+*	  - string value: these should be thought of as simple one-off strings that
+*		represent values on the character sheet of the player, such as the name
+*		of the magus, the tradition, or the reputations. These do not represent more complex
+*		string values such as items the player has.
 * 
 * Whenever a value is updated, a callback for that value being updated can be set with the
 * AddCallbackOnValueChanged() method, which is how all external state that depends upon
@@ -284,12 +306,33 @@ private:
 
 	const GameState& game_state_;
 
+	/*
+	* DoesDependencyContainCycle and its recursive helper ensure that when an expression is
+	* updated using SetExpression(), that the expression being created for the character
+	* doesn't have some circular dependency. If it did, the stack would overflow on evaluation,
+	* thus we throw an exception if we do find a cycle.
+	* 
+	* UpdateDependencyGraph will toss this exception if there is a cycle in the provided expression.
+	* If there is not any exception, then the dependency graph is updated accordinly as shown in sections
+	* above.
+	*/
 	bool DoesDependencyContainCycleRecursiveHelper(const DependencyNode* cur, unordered_set<string>& visited, unordered_set<string>& on_stack, const unordered_map<string, DependencyNode*>& graph) const;
 	bool DoesDependencyContainCycle(const DependencyNode* current, const unordered_map<string, DependencyNode*> graph) const;
 	void UpdateDependencyGraph(const Expression& expression);
 
+	/*
+	* Updates the internal cached_expression_vals_ map
+	* The updated_value param is the name of the value being updated
+	* and the new_value is the expression's new updated value. This is called
+	* recursively on each dependency defined in the dependency graph to
+	* make sure each expression value is updated accordingly.
+	*/
 	void UpdateCache(const string& updated_value, const float new_value);
 
+	/*
+	* These are simple helper debug methods to visually display the
+	* dependency graph and check if the structure of the tree is correct.
+	*/
 	void PrintDependencyGraphPretty(const string& value_name) const;
 	void GetPrettyTreeRecursiveHelper(string& result, const string& prefix, const DependencyNode* node, bool end) const;
 	void GetPrettyTreeString(string& result, const string& value_name) const;
@@ -299,21 +342,25 @@ public:
 	~CharacterState();
 
 	/*
-	 * Returns the value of the given value_name which may depend upon the
-	 * current GameState. If the given value is not contained within the
-	 * CharacterState, returns false. An exception is thrown
-	 * if the requested value is actually a string value.
+	 * Given a value_name for some state value of the character, if
+	 * the state value exists within character state, then the
+	 * given float is modified to contain that value and the method
+	 * returns true.
+	 * 
+	 * If the value does not exist in the character state, this
+	 * method returns false and does not modify result.
 	 */
 	bool GetValue(const string& value_name, float& result) const;
 
 	/*
-	* Returns the value of the given value_name. There is no dependency on state,
-	* simply tracks the character's strings for notes, descriptions, etc.
+	* Given a value_name for a string value, if the value exists within
+	* the character state, then result is modified to contain the
+	* associated string and the method returns true.
 	* 
-	* If a requested value_name does not exist or does not have the value of string,
-	* an exception is thrown.
+	* If the value does not exist in the character state, this method
+	* returns false and does not modify result.
 	*/
-	const string& GetStringValue(const string& value_name) const;
+	bool GetStringValue(const string& value_name, string& result) const;
 
 	/*
 	* SetValue() will set the value within CharacterState with the given value_name to the given value.
@@ -324,12 +371,17 @@ public:
 	* when character state changes, it should register a callback with the method `AddCallbackOnValueChange`
 	*/
 	void SetValue(const string& value_name, const float value);
-	void SetValue(const string& value_name, const string& value);
+	void SetStringValue(const string& value_name, const string& value);
 
 	/*
 	* Will set the expression within the CharacterState to the given expression assuming the
 	* syntax of the expression is valid and does not form a circular dependency of values.
 	* If the expression is in invalid syntax or forms a circular dependency, then a exception is thrown.
+	* 
+	* An exception is also thrown if the expression can not be evaluated at the time it is set. This
+	* can safely be ignored if future SetValues or SetExpressions will ensure that the state value
+	* referenced in the expression is set. Regardless, it is better to set base values first, then
+	* create expressions based on those values afterwards.
 	* 
 	* Future calls to GetValue() will return the evaulated value based on the expression set here.
 	* In this way, expressions are treated the same as values when retrieving data, but are different
@@ -345,16 +397,48 @@ public:
 	* Callback function will be passed the updated value.
 	* 
 	* Note: if many callbacks are added to a single value, this will decrease the performance of updating 
-	* that value with SetValue();
+	* that value with SetValue(); Also if the callbacks are expensive, this will also increase the cost
+	* of updating the specific value with SetValue().
 	*/
 	void AddCallbackOnValueChange(const string& value_name, void(*callback_function)(const float));
 
+	/*
+	* This prints ALL information of the character state.
+	*	TODO: Maybe add verbosity param to determine how much is actually printed if there comes to be
+	*			lots of information in a character state.
+	*/
 	void DebugPrintInfo() const;
 };
 
 ////////////////////////////////////////////
 //             GameState                  //
 ////////////////////////////////////////////
+/*
+* The GameState will act essentially as the GM's handle into the game world,
+* defining the necessary functionality of the setting and world. For example,
+* the GameState defines the SettingDateFormat. The GameState may have multiple
+* SettingContexts (for example, in my game world, Sahket doesn't have a 
+* traditional spring, winter, fall, summer, but a dry,wet, etc.) Being able to define
+* a setting context for the players will be extremely useful in defining what is available
+* to the players and how they view the information.
+* 
+* It may also be that a setting context changes over time based on events. Similar to
+* how the CharacterState has SeasonManager for handling the seasonal progression for 
+* the player with a timeline of events and their results, the GameState will have
+* a SettingManager, which will handle various settings in the world for the GameState,
+* with events that can be defined to happen in some timeline (Note: This timeline MUST
+* be editable duing play, otherwise the GM will encounter problems when players 
+* don't experience the event if they are not in the event context).
+* 
+* SettingEvent will be very similar to a normal event, but the effect will modify
+* SettingContexts rather than CharacterStates. Setting events also have unique tags
+* such as: 
+*		LOCAL_EVENT			--Only those within the SettingContext can know about it, and only in specific locations
+*		SETTING_EVENT		--Only those within the SettingContext can know about the event
+*		GLOBAL_EVENT		--Anyone can possibly know about the event
+*		SPECIFIC_CHARACTERS --Only specific characters are aware of the event
+*		ALL_CHARACTERS		--All characters are aware of the event
+*/
 class GameState {
 private:
 	unordered_map<string, float> state_;
