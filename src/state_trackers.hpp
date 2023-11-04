@@ -16,9 +16,84 @@
 
 using namespace std;
 
-class GameState;
 class CharacterState;
 class Expression;
+
+// TODO:
+// These might not need all be seperate classes, but I'm just outlining the various things I wish to track
+// for the player
+class GameState;
+class Note;
+class SettingDate;
+class SettingDateFormat;
+class SeasonManager;
+class Event;
+class ItemManager;
+class Item; // Types such as Plain Item, Device, Lab text, Tractus, Summae
+class LaboratoryManager; 
+
+/*
+* My pseudo-code thoughts on what classes might look like
+
+class Event {
+	name,
+	description,
+	source, (optional)
+	effect, (optional)
+	setting_date,
+	setting_location, (optional)
+	setting_event_tag, (optional)
+};
+
+class SettingData {
+	year,
+	season,
+	month,
+	day,
+	format,
+}
+
+class SettingDateFormat {
+	months_in_season,
+	season_in_year,
+	month_num_to_name,
+	season_num_to_name,
+}
+
+
+// Might just be a sub-set of a note or specific type of note
+class SettingLocation {
+	name,
+	broad,
+	specific,
+}
+
+class Note {
+	name,
+	description,
+	tags, (optional) --may define type, such as GM_NOTE, which means players can't view, or PLAYER_SPECIFIC, in which only specific players can view
+	references, (optional) --points to other notes this note may refer to.
+
+	class Tag {
+		data*,  --a pointer to any relevant data associated with the tag
+		enum Type {
+			GM_NOTE,
+			PLAYER_SPECIFIC, --In this case, data points to a list of players who have access to the note
+			CHARACTER_SPECIFIC, --In this case, data points to a list of characters who have access to the note
+			INDIVIDUAL,
+			WORLD_BUILDING,
+			PLAYER_DEFINED, --In this case, data points to a string with the name of the tag
+		}
+	}
+
+	class Reference {
+		some section of the text is defined as a reference,
+		name of what is the referenced note,
+	}
+}
+
+
+*/
 
 /*
  *		This file will be used to define all the structs and classes necessary to
