@@ -1,5 +1,7 @@
 ﻿#include "state_trackers.hpp"
 
+//using namespace Ars;
+
 Expression::ExpressionNode::~ExpressionNode() {
 	for (ExpressionNode* child : this->children_) {
 		delete child;
@@ -481,7 +483,6 @@ void Expression::GetStateValues(vector<string>& state_value_names) const {
 	GetStateValuesRecursiveHelper(ast_root_, state_value_names);
 }
 
-
 ////////////////////
 // CharacterState //
 ////////////////////
@@ -493,26 +494,22 @@ bool CharacterState::GetValue(const string& value_name, float& result) const
 {
 	if (base_vals_.count(value_name) != 0) {
 		result = (*const_cast<unordered_map<string, float>*>(&base_vals_))[value_name];
-	}
-	else if (cached_expression_vals_.count(value_name) != 0) {
-		// Dumb C++ shenanigans. It won't let me access the map using the operator[] since it could be modified.
+	} else if (cached_expression_vals_.count(value_name) != 0) {
+		// Dumb C++ shenanigans. It won't let me access the map using the operator[] since it could be modified and thus violates the "const" keyword
 		result = (*const_cast<unordered_map<string, float>*>(&cached_expression_vals_))[value_name];
-	}
-	//else if (expression_vals_.count(value_name) != 0) {
-	//	// More shenanigans. Since we are just caching the value, this shouldn't actually count as a state change for character_state
-	//	// TODO: Update Cache through method
-	//	(*const_cast<unordered_map<string, float>*>(&cached_expression_vals_))[value_name] = expression_vals_.at(value_name)->GetValue(game_state_, *this);
-	//	result = (*const_cast<unordered_map<string, float>*>(&cached_expression_vals_))[value_name];
-	//}
-	else {
+	} else {
 		return false;
 	}
 	return true;
 }
 
-const string& CharacterState::GetStringValue(const string& value_name) const
+bool CharacterState::GetStringValue(const string& value_name, string& result) const
 {
-	return value_name;
+	if (string_vals_.count(value_name) != 0) {
+		result = string_vals_.at(value_name);
+		return true;
+	}
+	return false;
 }
 
 void CharacterState::SetValue(const string& value_name, const float value)
@@ -521,7 +518,7 @@ void CharacterState::SetValue(const string& value_name, const float value)
 	UpdateCache(value_name, value);
 }
 
-void CharacterState::SetValue(const string& value_name, const string& value)
+void CharacterState::SetStringValue(const string& value_name, const string& value)
 {
 	string_vals_[value_name] = value;
 }
@@ -531,15 +528,18 @@ void CharacterState::SetExpression(const string& value_name, const string& expre
 	Expression* possible_expression = new Expression(value_name);
 	possible_expression->SetExpression(expression);
 	try {
+		
 		UpdateDependencyGraph(*possible_expression);
-	}
-	catch (SyntaxError& e) {
+	} catch (SyntaxError& e) {
 		if (e.GetType() == SyntaxError::CYCLIC_DEPENDENCY) {
+			// We temporarily catch just to prevent memory leaks
 			delete possible_expression;
 		}
 		throw e;
 	}
 	if (expression_vals_.count(value_name) != 0 && expression_vals_[value_name] != nullptr) {
+		// There is a previously existing value within the map which we must replace.
+		// delete the old, replace with the new.
 		delete expression_vals_[value_name];
 	}
 	expression_vals_[value_name] = possible_expression;
