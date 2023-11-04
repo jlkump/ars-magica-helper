@@ -8,9 +8,11 @@ void CheckEvenParentheses(const string& expression);
 
 void TrimExcessParentheses(string& s);
 
-bool IsTrueValue(string& s);
+inline void RemoveWhitespace(string& s);
 
-bool IsStateValue(const string& s);
+bool IsTrueValueFormat(string& s);
+
+bool IsStateValueFormat(const string& s);
 
 string FormatString(const char* format ...);
 

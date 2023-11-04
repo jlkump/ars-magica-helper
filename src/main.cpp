@@ -52,7 +52,7 @@ int main(int, char**)
 					string name;
 					string expression;
 					ParseExpression(lowercase_nowhitespace, name, expression);
-					if (IsTrueValue(expression)) {
+					if (IsTrueValueFormat(expression)) {
 						c.SetValue(name, stod(expression));
 					}
 					else {

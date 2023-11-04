@@ -1,7 +1,5 @@
 ﻿#include "state_trackers.hpp"
 
-//using namespace Ars;
-
 Expression::ExpressionNode::~ExpressionNode() {
 	for (ExpressionNode* child : this->children_) {
 		delete child;
@@ -343,10 +341,10 @@ void Expression::ParseAndBuildExpressionTree(const string& expression, Expressio
 		expression_parse_item current = items.front();
 		TrimExcessParentheses(current.expression);
 		ExpressionNode* child = nullptr;
-		if (IsTrueValue(current.expression)) {
+		if (IsTrueValueFormat(current.expression)) {
 			child = new ExpressionNode(ExpressionNode::TRUE_VALUE);
 			child->node_value_ = current.expression;
-		} else if (IsStateValue(current.expression)) {
+		} else if (IsStateValueFormat(current.expression)) {
 			child = new ExpressionNode(ExpressionNode::STATE_VALUE);
 			child->node_value_ = current.expression.substr(1, current.expression.size() - 2); // Chop off the brackets []
 		} else {
@@ -702,4 +700,30 @@ void CharacterState::DebugPrintInfo() const {
 bool GameState::GetValue(const string& value_name, float& result) const {
 	result = 0.0f;
 	return false;
+}
+
+CharacterEffect::CharacterEffect(const string& value_to_effect, Operation op, string modify_value) :
+	value_name_(value_to_effect), op_(op), modify_value_(modify_value) {
+	if (!IsTrueValueFormat(modify_value) && op == ADD || op == SUBTRACT) {
+		// Throw exception b/c operation is not possible.
+	}
+}
+
+void CharacterEffect::ApplyEffect(CharacterState& c) {
+	previous_value_ = "NAN";
+	if (c.IsBaseValue(value_name_)) {
+
+	}
+	if (c.IsExpressionValue(value_name_) && IsTrueValueFormat(modify_value_)) {
+		// Can't modify an expression to be a true value, throw exception and set to no-op for undo
+	}
+	c.GetValue(value_name_, previous_value_); // Only modifies previous_value_ if value_name exists
+	switch (op_) {
+		case Operation::ADD:
+			c.SetValue(value_name_, previous_value_ + modify_value_);
+		case Operation::REMOVE:
+			c.RemoveValue(value_name_, );
+		case Operation::SET:
+		case Operation::SUBTRACT:
+	}
 }

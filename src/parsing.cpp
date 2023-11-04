@@ -60,7 +60,11 @@ void TrimExcessParentheses(string& s) {
 	s = string(iter, end);
 }
 
-bool IsTrueValue(string& s) {
+void RemoveWhitespace(string& s) {
+	s.erase(remove_if(s.begin(), s.end(), isspace), s.end());
+}
+
+bool IsTrueValueFormat(string& s) {
 	int dot_count = 0;
 	for (const char c : s) {
 		if (c == '.') {
@@ -73,7 +77,7 @@ bool IsTrueValue(string& s) {
 	return dot_count < 2;
 }
 
-bool IsStateValue(const string& s) {
+bool IsStateValueFormat(const string& s) {
 	if (s.begin() == s.end() || *s.begin() != '[' || *(s.end() - 1) != ']') {
 		return false;
 	}
@@ -169,12 +173,12 @@ bool CreateCharacterFromPlainTextFile(const char* file_path, CharacterState& cha
 			// This to-lowercase-no-whitespace transformation should probably be done before the expression is passed here.
 			string lowercase_nowhitespace = line;
 			transform(line.begin(), line.end(), lowercase_nowhitespace.begin(), [](unsigned char c) { return std::tolower(c); });
-			lowercase_nowhitespace.erase(remove_if(lowercase_nowhitespace.begin(), lowercase_nowhitespace.end(), isspace), lowercase_nowhitespace.end());
+			RemoveWhitespace(lowercase_nowhitespace);
 			if (ContainsEqual(lowercase_nowhitespace)) {
 				string name;
 				string expression;
 				ParseExpression(lowercase_nowhitespace, name, expression);
-				if (IsTrueValue(expression)) {
+				if (IsTrueValueFormat(expression)) {
 					character.SetValue(name, stod(expression));
 				}
 				else {

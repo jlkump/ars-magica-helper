@@ -26,11 +26,13 @@ class GameState;
 class Note;
 class SettingDate;
 class SettingDateFormat;
+class SettingContext;
 class SeasonManager;
 class Event;
 class ItemManager;
 class Item; // Types such as Plain Item, Device, Lab text, Tractus, Summae
 class LaboratoryManager; 
+class Modifier;
 
 /*
 * My pseudo-code thoughts on what classes might look like
@@ -227,6 +229,8 @@ public:
 	void GetPrettyTreeString(string& result) const;
 };
 
+
+
 ////////////////////////////////////////////
 //             CharacterState             //
 ////////////////////////////////////////////
@@ -305,6 +309,9 @@ private:
 	unordered_map<string, DependencyNode*> dependency_graphs_;
 
 	const GameState& game_state_;
+	const SettingContext* setting_context_;
+	SettingDate birth_year_;
+	SettingDate currrent_year_;
 
 	/*
 	* DoesDependencyContainCycle and its recursive helper ensure that when an expression is
@@ -338,7 +345,7 @@ private:
 	void GetPrettyTreeString(string& result, const string& value_name) const;
 
 public:
-	CharacterState(const GameState& game_state) : game_state_(game_state) {}
+	CharacterState(const GameState& game_state) : game_state_(game_state), setting_context_(game_state_.GetSettingContextForCharacter(*this)) {}
 	~CharacterState();
 
 	/*
@@ -390,6 +397,17 @@ public:
 	void SetExpression(const string& value_name, const string& expression);
 
 	/*
+	* If the removed value was an expression, old expression will point to the expression that represents it.
+	* If the removed value was a base value, then the value of old_expression will be null.
+	* If the value name does not exist, then the method returns false
+	* This will also remove all dependent expressions of the removed value, which are stored in the passed in vector
+	*/
+	bool RemoveValue(const string& value_name, Expression*& old_expression, vector<Expression*>& dependent_expressions);
+
+	bool IsBaseValue(const string& value_name);
+	bool IsExpressionValue(const string& value_name);
+
+	/*
 	* AddCallbackOnValueChange will add the given callback function to the CharacterState so that
 	* when SetValue is called setting value_name, this callback function will be called if the names match.
 	* If they do not match, the callback function will not be called. 
@@ -409,6 +427,22 @@ public:
 	*/
 	void DebugPrintInfo() const;
 };
+
+/*		The game state will hold many SettingContexts,
+* which define the setting data, such as the current year,
+* what resources are available to buy easily, the format
+* for how to interpret a given date, the various nearby locations,
+* known npcs, etc.
+*		Each CharacterState has a setting context that it uses
+* to evaluate certain expressions. There is a default setting
+* context that defines universally shared setting details.
+*			GameState
+*				|
+*				|
+*			   \/
+*				+
+*		  SettingContext	--->+	CharacterState
+*/
 
 ////////////////////////////////////////////
 //             GameState                  //
@@ -442,10 +476,302 @@ public:
 class GameState {
 private:
 	unordered_map<string, float> state_;
+	// These define events that are universal to all setting contexts
+	unordered_map<SettingDate, Event> defined_events_;
 protected:
 public:
 	bool GetValue(const string& value_name, float& result) const;
 
+	const SettingContext* GetDefaultSettingContext() const;
+
+	/*
+	* Returns default setting context if the character has no specific context
+	*/
+	const SettingContext* GetSettingContextForCharacter(CharacterState& c) const;
+
+	const SettingDate GetCurrrentYear(CharacterState& c) const;
+	const SettingDate GetMaximumYear(CharacterState& c) const;
+};
+
+class SettingContext {
+private:
+	GameState& parent_;
+	SettingDateFormat date_format_;
+	// These define all the events for the setting context
+	unordered_map<SettingDate, Event> defined_events_; 
+
+public:
+	SettingContext(GameState& game_state) : parent_(game_state) {}
+
+	bool GetValue(const string& value_name, float& result) const;
+
+
+};
+
+/*
+* This defines the date for a setting.
+* Hard limits:
+*	- There are only 4 seasons in a year, evenly spaced across the months
+*   - SettingDates are ordered by their year and month
+*/
+class SettingDate {
+	friend bool operator==(const SettingDate& lhs, const SettingDate& rhs) {
+		return lhs.year_ == rhs.year_ && lhs.month_ == rhs.month_ && lhs.day_ == rhs.day_;
+	}
+	friend bool operator!=(const SettingDate& lhs, const SettingDate& rhs) {
+		return !(lhs == rhs);
+	}
+	friend bool operator>(const SettingDate& lhs, const SettingDate& rhs) {
+		if (lhs.year_ > rhs.year_) {
+			return true;
+		} else if (lhs.year_ < rhs.year_) {
+			return false;
+		}
+		if (lhs.month_ > rhs.month_) {
+			return true;
+		} else if (lhs.month_ < rhs.month_) {
+			return false;
+		}
+		return lhs.day_ > rhs.day_;
+	}
+	friend bool operator<(const SettingDate& lhs, const SettingDate& rhs) {
+		if (lhs.year_ < rhs.year_) {
+			return true;
+		}
+		else if (lhs.year_ > rhs.year_) {
+			return false;
+		}
+		if (lhs.month_ < rhs.month_) {
+			return true;
+		}
+		else if (lhs.month_ > rhs.month_) {
+			return false;
+		}
+		return lhs.day_ < rhs.day_;
+	}
+	friend bool operator>=(const SettingDate& lhs, const SettingDate& rhs) {
+		return lhs > rhs || lhs == rhs;
+	}
+	friend bool operator<=(const SettingDate& lhs, const SettingDate& rhs) {
+		return lhs < rhs || lhs == rhs;
+	}
+
+public:
+	enum Season {
+		FIRST,
+		SECOND,
+		THIRD,
+		FOURTH,
+	};
+private:
+	int year_;
+	Season season_;
+	int month_;
+	int day_;
+public:
+};
+
+// Given a setting date, converts between:
+// - season enum and season name
+// - month number and month name
+// - ordered in a nice string display
+class SettingDateFormat {
+private:
+	unordered_map<int, int> days_in_month_;
+	unordered_map<SettingDate::Season, string> season_name_;
+	unordered_map<int, string> month_name_;
+	unordered_map<SettingDate, string> unique_day_names_;
+
+public:
+	void DefineDaysInMonth(int month, int num_days);
+	void DefineMonthsInYear(int num_months);
+	void DefineSeasonName(SettingDate::Season season, const string& name);
+	void DefineMonthName(int month, const string& name);
+	void DefineUniqueDayName(const SettingDate& date, const string& name);
+	/*
+	* Format is defined by a string in the following syntax:
+	*		- %y  :  defines the year	(printed as an int)
+	*		- %S  :  defines the season (printed as a string)
+	*		- %M  :  defines the month  (printed as a string)
+	*		- %m  :  defines the month  (printed as an int)
+	*		- %d  :  defines the day	(printed as an int)
+	*		- %D  :  defines the day    (printed as a string if available, int otherwise)
+	*/
+	void DefineDateFormat(const string& format);
+
+	/*
+	* Returns the name of the season for the given setting date
+	*/
+	string GetSeasonName(const SettingDate& s) const;
+
+	/*
+	* Returns the name of the month for the given setting date. If the
+	* month is outside the range for this format, returns an empty string.
+	*/
+	string GetMonthName(const SettingDate& s) const;
+
+	/*
+	* Returns the unique name for the day of a given date. If there is no
+	* unique name for the day, then an empty string is returned.
+	* (Tracks things like local holidays and such).
+	*/
+	string GetUniqueDayName(const SettingDate& s) const;
+
+	/*
+	* Returns the full string for the date in the appropriate format
+	* defined for this setting. Defined by DefineDateFormat()
+	*/
+	string GetFullDateString(const SettingDate& s) const;
+
+	/*
+	* Returns the number of days within a given month. Returns -1
+	* if the month is not defined in this setting format.
+	*/
+	int GetDayCountForMonth(const SettingDate& s) const;
+
+	/*
+	* Returns the number of months for a year. Returns -1 if
+	* the value has not yet been defined.
+	*/
+	int GetMonthCountForYear(const SettingDate& s) const;
+};
+
+
+////////////////////////////////////////////
+//             SeasonManager              //
+////////////////////////////////////////////
+/*
+* This class manages a given CharacterState, performing actions on that
+* character in a format of per-season events. These events are performed
+* within some SettingContext that is associated with the character.
+* 
+* An event is performed at a given SettingDate which defines what point
+* the event happened to the character.
+* 
+* The SeasonManager has a set of all events that happen to a character.
+* These events are ordered in a timeline within the SeasonManager and
+* the ownering CharacterState can be changed to various different points
+* in time by setting the active date. Events can be created at any
+* point in the timeline and the CharacterState will be updated accordingly.
+* 
+* Every SettingDate can be ordered according to it's year, season, month,
+* and day. The way a SettingDate is displayed is defined by the SettingContext,
+* which holds a SettingDateFormat specifier.
+* 
+* The limit to how far forward the player can go is defined by the GameState
+* as an upper-bound limit. The player's birth year is also the lower-bound
+* on how far back an event can be created.
+*/
+
+class CharacterEvent {
+public:
+	// Given some character, modifies values for the character
+	void ApplyEvent(CharacterState& c) const;
+};
+
+/*
+* Effects on the character from character effect may add, subtract, set, or remove
+* base values of the character.
+* TODO: Need a separate way of adding / removing character expressions in a similar format
+*/
+class CharacterEffect {
+public:
+	enum Operation {
+		ADD,
+		SUBTRACT,
+		SET,
+		REMOVE,
+	};
+private:
+	Operation op_;
+	string value_name_;
+	string modify_value_; // A simple value to be added to the 
+	string previous_value_; // value of NaN when previous value didn't exist
+	bool is_expression_;
+	vector<Expression*> dependent_expressions_; // When we remove a value, there may exist some dependencies, so keep track of them so we can undo.
+public:
+	/*
+	* Throws exceptions if the modify value is not in the right format for the corresponding operation.
+	*/
+	CharacterEffect(const string& value_to_effect, Operation op, string modify_value);
+
+	void ApplyEffect(CharacterState& c);
+	void UndoEffect(CharacterState& c);
+};
+
+class SeasonAction {
+private:
+	string name_of_action_;
+	string desciption_of_action_;
+	CharacterEffect effect_of_activity_;
+	vector<string> action_tags_; // Used for organization and sorting
+};
+
+class SeasonActivity {
+private:
+	SettingDate date_of_activity_;
+	SettingContext context_of_activity_;
+	SeasonAction action_;
+};
+
+
+class SeasonManager {
+private:
+	CharacterState& owning_character_;
+	SettingDate viewing_year_;
+public:
+	/*
+	* These following methods change the true events and
+	* actual current year for the player.
+	*/
+	void AdvanceByDay();
+	void AddDailyEvent();
+	void RemoveDailyEvent();
+
+	void AdvanceByMonth();
+	void AddMonthlyEvent(); // Usefull for tracking wounds and such
+	void RemoveMonthlyEvent();
+
+	void AdvanceBySeason();
+	void AddSeasonalEvent();
+	void RemoveSeasonalEvent();
+
+	void AdvanceByYear();
+	void AddYearlyEvent(const SettingDate& date_of_occurance, const CharacterEvent& ev);
+	void RemoveYearlyEvent();
+
+	/*
+	* These are ways to view the future or past time, up to the limit
+	* defined by the character's GameState. This temporarily
+	* modifies the character's data, but all changes are tracked by
+	* the season manager.
+	*/
+	void ViewCharacterAtTime(const SettingDate& date) const;
+
+	const vector<const SeasonActivity&> GetActivitiesDuringTime(const SettingDate& date) const;
+
+	/*
+	* This allows the player to modify a past seasonal activity
+	* The two activities must occur within the same season.
+	* The Character's GameState has a limit on how far back
+	* the player can modify previous activities, but this can
+	* be overriden with the ForceModifyPastActivity.
+	*/
+	void ModifyPastActivity(const SeasonActivity& old_activity, const SeasonActivity& new_activity);
+	/*
+	* Overrides the GameState limitation of the ModifyPastActivity
+	*/
+	void ForceModifyPastActivity(const SeasonActivity& old_activity, const SeasonActivity& new_activity);
+
+	/*
+	* Note: does not actually remove the activity object, just makes it an empty / no-op
+	* activity. This way modify past activity will still work on a removed activity.
+	* Similar to ModifyPastActivity, RemovePastActivity will only work if the
+	* 
+	* GameState allows for it. This can be overriden with ForceRemovePastActivity
+	*/
+	void RemovePastActivity(const SeasonActivity& old_activity);
+	void ForceRemovePastActivity(const SeasonActivity& old_activity);
 };
 
 #endif
