@@ -711,11 +711,10 @@ CharacterEffect::CharacterEffect(const string& value_to_effect, Operation op, st
 
 void CharacterEffect::ApplyEffect(CharacterState& c) {
 	previous_value_ = "NAN";
-	if (c.IsBaseValue(value_name_)) {
-
-	}
 	if (c.IsExpressionValue(value_name_) && IsTrueValueFormat(modify_value_)) {
 		// Can't modify an expression to be a true value, throw exception and set to no-op for undo
+	} else if () {
+
 	}
 	c.GetValue(value_name_, previous_value_); // Only modifies previous_value_ if value_name exists
 	switch (op_) {
