@@ -10,9 +10,4 @@ The goals are:
 - Extensibility. Should the user desire, they should be able to add their own formulae, edit existing formulae, and configure their view
 
 ## How to Contribute
-Clone the repo to some workspace folder. Make sure you have the rust compiler and cargo installed.
-
-Run:
-- `cargo build` to build
-- `cargo run` to build and run
-- `cargo test` to test the project.
+Clone the repo to some workspace folder. Make sure you have the rust compiler and cargo installed. You will also need to have trunk installed (You can use `cargo install trunk` if you do not have it already). Once that is done, simply run `trunk serve` in the `ars-webclient-app` directory. You can view the webclient at the localhost address (127.0.0.1:8000)[127.0.0.1:8000] in any browser.
