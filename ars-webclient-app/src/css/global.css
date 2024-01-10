@@ -1,0 +1,100 @@
+html, body, div, span, applet, object,
+iframe, h1, h2, h3, h4, h5, h6, p, blockquote,
+pre, a, abbr, acronym, address, big, cite,
+code, del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var, b,
+u, i, center, dl, dt, dd, ol, ul, li, fieldset,
+form, label, legend, table, caption, tbody,
+tfoot, thead, tr, th, td, article, aside,
+canvas, details, embed, figure, figcaption,
+footer, header, hgroup, menu, nav, output, ruby,
+section, summary, time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline; }
+
+body {
+    /* background: rgb(181, 181, 181); */
+    background: #CCB193;
+}
+
+img {
+    border-radius: 10%;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+    font-family: Times, Times New Roman, serif;
+    color: #29190D;
+    font-weight: bold;
+}
+
+p {
+    font-size: 18pt;
+    text-align: left;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    text-align: center;
+    font-size: 24pt;
+}
+
+
+.prevent-select {
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
+}
+
+.center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.center-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: center;
+}
+
+.widget-container {
+    margin: 5px;
+    border: 5px solid #29190D;
+    padding: 5px;
+    border-radius: 10%;
+    background: gray;
+}
+
+/* Warpping display */
+.warp-circle {
+    margin: 5px;
+    width: 75px;
+    height: 75px;
+    border: 10px outset #5C4540;
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    border-radius: 50%;
+    background-image: radial-gradient(#572C5C 15%, #54185C 15%, #441C5C 70%);
+}
+
+.warp-score-text {
+    padding-top: 20%;
+    text-align: center;
+    vertical-align: text-bottom;
+    font-weight: bold;
+    font-size: xx-large;
+    color: #A269A8;
+}
+
+.warp-points-text {
+    text-align: center;
+    /* vertical-align:; */
+    font-weight: bold;
+    font-size: medium;
+    color: #A269A8;
+}
