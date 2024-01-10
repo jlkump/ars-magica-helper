@@ -10,12 +10,9 @@ The goals are:
 - Extensibility. Should the user desire, they should be able to add their own formulae, edit existing formulae, and configure their view
 
 ## How to Contribute
-Clone the repo to some workspace folder. Make sure you have the rust compiler and cargo installed. You will also need: 
-- The rust compiler to have wasm32 as a compilation option. run `rustup target add wasm32-unknown-unknown` to be sure it is up to date. 
-- trunk, which builds wasm32 for us and can host the server for testing `cargo install trunk`
+Clone the repo to some workspace folder. Make sure you have the rust compiler and cargo installed.
 
-Then, run:
+Run:
 - `cargo build` to build
 - `cargo run` to build and run
 - `cargo test` to test the project.
-<!-- - `trunk ...` to run a server? -->
