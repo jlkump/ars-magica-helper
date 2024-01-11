@@ -119,18 +119,6 @@ h3 {
     align-items: flex-start;
 }
 
-.page-content {
-    margin: 0;
-    display: flex;
-}
-
-.main {
-    flex: 50%;
-    /* background: rebeccapurple; */
-    display: flex;
-    flex-direction: column;
-}
-
 .detail {
     flex: 50%;
     border: 2px dotted #29190D;
@@ -151,6 +139,13 @@ h3 {
     grid-template-columns: repeat(1, 1fr);
     gap: 10px;
     grid-auto-rows: minmax(100px, auto);
+}
+
+.display-grid-1-special {
+    display: grid;
+    grid-auto-columns: minmax(100px, auto);
+    gap: 10px;
+    grid-template-rows: 70% 1fr;
 }
 
 .display-grid-2 {

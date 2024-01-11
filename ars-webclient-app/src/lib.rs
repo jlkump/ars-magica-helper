@@ -5,6 +5,7 @@ use yew::prelude::*;
 
 use components::organisms::nav_bar::NavBar;
 use components::organisms::character_info::CharacterInfo;
+use components::organisms::details_display::DetailsDisplay;
 
 const GLOBAL_STYLESHEET_FILE: &'static str = include_str!("css/global.css");
 
@@ -14,15 +15,9 @@ pub fn app() -> Html {
         <>
             <Global css={GLOBAL_STYLESHEET_FILE} />
             <NavBar/>
-            <div class="page-content">
-                <div class="main prevent-select">
-                    <h2>{"Character Info"}</h2>
-                    <CharacterInfo/>
-                </div>
-                <div class="detail">
-                    <h2>{"Details"}</h2>
-                    // <p>{"Some text"}</p>
-                </div>
+            <div class="display-grid-2">
+                <CharacterInfo/>
+                <DetailsDisplay/>
             </div>
         </>
     }

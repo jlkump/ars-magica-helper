@@ -16,7 +16,8 @@ pub struct Props {
 #[styled_component(CharacterInfo)]
 pub fn character_info(_props: &Props) -> Html {
     html! {
-        <span>
+        <span class="main prevent-select grid-r-1 grid-c-1-2">
+            // <h2>{"Character Info"}</h2>
             <div class={"display-grid-2 margin-small"}>
                 <div class={"display-grid-1 grid-r-1 grid-c-1-2"}>
                     <div class={"display-grid-3 grid-r-1"}>
