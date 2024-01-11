@@ -13,12 +13,10 @@ pub fn decrepitude_display(props: &Props) -> Html {
     let points_text = format!("Points: {}", props.points);
     html! {
         <span>
-            <div class="prevent-select widget-container">
+            <div class="prevent-select">
                 <h3>{"Decrepitude"}</h3>
                 <p>{score_text}</p>
                 <p>{points_text}</p>
-                // <div class="warp-circle">
-                // </div>
             </div>
         </span>
     }

@@ -19,20 +19,23 @@ section, summary, time, mark, audio, video {
 body {
     /* background: rgb(181, 181, 181); */
     background: #CCB193;
+    display: flex;
+    flex-direction: column;
 }
 
 img {
     border-radius: 10%;
+    pointer-events: none
 }
 
 p, h1, h2, h3, h4, h5, h6 {
     font-family: Times, Times New Roman, serif;
-    color: #29190D;
+    color: #2e1400;
     font-weight: bold;
 }
 
 p {
-    font-size: 18pt;
+    font-size: 14pt;
     text-align: left;
 }
 
@@ -41,6 +44,44 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 24pt;
 }
 
+h3 {
+    text-align: left;
+    font-size: 18pt;
+}
+
+.navbar ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #4b3a3a;
+    display: flex;
+    align-items: center;
+    vertical-align: middle;
+    flex-wrap: nowrap;
+}
+
+.navbar .left-align li {
+    float: left;
+}
+
+.navbar li a {
+    display: inline-block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+.navbar li a:hover {
+    background-color: #111;
+}
+
+.navbar .icon {
+    margin-top: 10px;
+    margin-right: 10px;
+    margin-left: 10px;
+}
 
 .prevent-select {
     -webkit-user-select: none; /* Safari */
@@ -62,12 +103,96 @@ h1, h2, h3, h4, h5, h6 {
     align-items: center;
 }
 
-.widget-container {
-    margin: 5px;
-    border: 5px solid #29190D;
-    padding: 5px;
-    border-radius: 10%;
-    background: gray;
+.half-flex {
+    flex: 50%;
+}
+
+.thirds-flex {
+    flex: 33%;
+}
+
+.two-thirds-flex {
+    flex: 66%;
+}
+
+.flex-start {
+    align-items: flex-start;
+}
+
+.page-content {
+    margin: 0;
+    display: flex;
+}
+
+.main {
+    flex: 50%;
+    /* background: rebeccapurple; */
+    display: flex;
+    flex-direction: column;
+}
+
+.detail {
+    flex: 50%;
+    border: 2px dotted #29190D;
+}
+
+.widget {
+    padding: 10px;
+    background: #5C4540;
+    border: 3px dotted #29190D;
+}
+
+.margin-small {
+    margin: 10px;
+}
+
+.display-grid-1 {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 10px;
+    grid-auto-rows: minmax(100px, auto);
+}
+
+.display-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    grid-auto-rows: minmax(100px, auto);
+}
+
+.display-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    grid-auto-rows: minmax(100px, auto);
+}
+
+.grid-c-1-2 {
+    grid-column: 1 / 2;
+}
+
+.grid-c-2-3 {
+    grid-column: 2 / 3;
+}
+
+.grid-c-3-4 {
+    grid-column: 3 / 4;
+}
+
+.grid-c-2-4 {
+    grid-column: 2 / 4; 
+}
+
+.grid-r-1 {
+    grid-row: 1;
+}
+
+.grid-r-2 {
+    grid-row: 2;
+}
+
+.grid-r-3 {
+    grid-row: 3;
 }
 
 /* Warpping display */
