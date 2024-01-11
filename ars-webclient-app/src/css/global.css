@@ -14,7 +14,8 @@ section, summary, time, mark, audio, video {
   border: 0;
   font-size: 100%;
   font: inherit;
-  vertical-align: baseline; }
+  vertical-align: baseline; 
+}
 
 body {
     /* background: rgb(181, 181, 181); */
@@ -35,7 +36,7 @@ p, h1, h2, h3, h4, h5, h6 {
 }
 
 p {
-    font-size: 14pt;
+    font-size: 12pt;
     text-align: left;
 }
 
@@ -44,43 +45,64 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 24pt;
 }
 
+h2 {
+    font-size: 20pt;
+}
+
 h3 {
-    text-align: left;
     font-size: 18pt;
 }
 
-.navbar ul {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background-color: #4b3a3a;
-    display: flex;
-    align-items: center;
+h4 {
+    font-size: 16pt;
+}
+
+h5 {
+    font-size: 14pt;
+}
+
+h6 {
+    font-size: 12pt;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    /* border: 3px dotted #29190D; */
+}
+
+th, td {
+    border: 3px solid #29190D;
+    padding: 2px;
     vertical-align: middle;
-    flex-wrap: nowrap;
 }
 
-.navbar .left-align li {
-    float: left;
+/* This might be a good option to put in code for variable height */
+.table-container {
+    height: 300px;
+    overflow-y: scroll;
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
 }
 
-.navbar li a {
-    display: inline-block;
-    color: white;
+.table-container::-webkit-scrollbar {
+    display: none;
+}
+
+.text-center {
     text-align: center;
-    padding: 14px 16px;
-    text-decoration: none;
 }
 
-.navbar li a:hover {
-    background-color: #111;
+.text-left {
+    text-align: left;
 }
 
-.navbar .icon {
-    margin-top: 10px;
-    margin-right: 10px;
-    margin-left: 10px;
+.text-small {
+    font-size: 10pt;
+}
+
+.text-large {
+    font-size: 14pt;
 }
 
 .prevent-select {
@@ -94,6 +116,7 @@ h3 {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    vertical-align: middle;
 }
 
 .center-row {
@@ -119,26 +142,46 @@ h3 {
     align-items: flex-start;
 }
 
-.detail {
-    flex: 50%;
-    border: 2px dotted #29190D;
+.overflow-x-scroll {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+    overflow-x: scroll;
 }
 
-.widget {
-    padding: 10px;
-    background: #5C4540;
-    border: 3px dotted #29190D;
+.overflow-x-scroll::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+}
+
+.overflow-y-scroll {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+    overflow-y: scroll;
+}
+
+.overflow-y-scroll::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
 }
 
 .margin-small {
     margin: 10px;
 }
 
-.display-grid-1 {
+.margin-small-top {
+    margin-top: 10px;
+}
+
+.display-grid-1-1 {
     display: grid;
-    grid-template-columns: repeat(1, 1fr);
+    grid-auto-columns: minmax(100px, auto);
+    grid-template-rows: 1fr;
+    gap: 0px;
+}
+
+.display-grid-1-2 {
+    display: grid;
+    grid-auto-columns: minmax(100px, auto);
+    grid-template-rows: 1fr 1fr;
     gap: 10px;
-    grid-auto-rows: minmax(100px, auto);
 }
 
 .display-grid-1-special {
@@ -188,6 +231,54 @@ h3 {
 
 .grid-r-3 {
     grid-row: 3;
+}
+
+.navbar ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #4b3a3a;
+    display: flex;
+    align-items: center;
+    vertical-align: middle;
+    flex-wrap: nowrap;
+}
+
+.navbar .left-align li {
+    float: left;
+}
+
+.navbar li a {
+    display: inline-block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+.navbar li a:hover {
+    background-color: #111;
+}
+
+.navbar .icon {
+    margin-top: 10px;
+    margin-right: 10px;
+    margin-left: 10px;
+}
+
+.widget {
+    padding: 10px;
+    background: #5C4540;
+    border: 3px solid #29190D;
+}
+
+.no-padding {
+    padding: 0px;
+}
+
+.no-border {
+    border: 0px;
 }
 
 /* Warpping display */
