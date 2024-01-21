@@ -1,9 +1,11 @@
 # TODO
 
-1. Make a list component for abilities, characteristics, wounds, virtues, flaws, personality traits, and reputations.
+- [x]: ~~Make a list component for abilities, characteristics, wounds, virtues, flaws, personality traits, and reputations.~~
 
-2. Make Molecules for presenting character data nicely on screen.
+- [ ]: Make Molecules for presenting character data nicely on screen.
 
-3. Make detailed view on the right of screen. (Togglable view). Splits the screen in half.
+- [ ]: Make detailed view on the right of screen. (Togglable view). Splits the screen in half.
 
-4. Make buttons for switching between different detailed views
+- [ ]: Make buttons for switching between different detailed views
+
+- [ ]: Change the warp bubble to be warp mist animated using the following as reference.https://codepen.io/ksenia-k/pen/zYyqRWE

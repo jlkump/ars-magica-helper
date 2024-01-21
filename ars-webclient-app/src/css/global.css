@@ -27,10 +27,10 @@ body {
 button {
     background: #CCB193;
     padding: 8px 10px;
-    border-radius: 25%;
+    border-radius: 10px;
     border: 3px solid #29190D;
-    box-shadow: 0 9px #29190D;
-    margin: 7px;
+    box-shadow: 0 4px #29190D;
+    margin: 2px;
     text-align: center;
     text-decoration: none;
     display: inline-block;
@@ -43,7 +43,7 @@ button:hover {
 
 button:active {
     background-color: #e4d5c5;
-    box-shadow: 0 5px #29190D;
+    box-shadow: 0 0px #29190D;
     transform: translateY(4px);
 }
 
@@ -126,6 +126,10 @@ th, td {
 
 .text-large {
     font-size: 14pt;
+}
+
+.underlined {
+    text-decoration: underline;
 }
 
 .prevent-select {
@@ -228,6 +232,12 @@ th, td {
     grid-auto-rows: minmax(100px, auto);
 }
 
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: minmax(10px, auto);
+}
+
 .grid-c-1-2 {
     grid-column: 1 / 2;
 }
@@ -246,6 +256,10 @@ th, td {
 
 .grid-c-2-4 {
     grid-column: 2 / 4; 
+}
+
+.grid-c-4-5 {
+    grid-column: 4 / 5;
 }
 
 .grid-r-1 {
