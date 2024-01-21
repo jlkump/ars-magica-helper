@@ -8,6 +8,7 @@ pub struct Props {
     pub medium: i32,
     pub heavy: i32,
     pub incapacitating: i32,
+    #[prop_or_default]
     pub class: Option<String>,
 }
 

@@ -5,6 +5,7 @@ use yew::prelude::*;
 pub struct Props {
     pub radius: i32,
     pub border: i32,
+    #[prop_or_default]
     pub class: Option<String>,
 }
 

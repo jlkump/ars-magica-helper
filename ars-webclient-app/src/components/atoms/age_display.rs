@@ -5,6 +5,7 @@ use yew::prelude::*;
 pub struct Props {
     pub true_age: i32,
     pub apparent_age: i32,
+    #[prop_or_default]
     pub class: Option<String>,
 }
 

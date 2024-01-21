@@ -4,6 +4,7 @@ use yew::prelude::*;
 #[derive(Properties, Clone, PartialEq)]
 pub struct Props {
     pub flaws: Vec<String>,
+    #[prop_or_default]
     pub class: Option<String>,
 }
 

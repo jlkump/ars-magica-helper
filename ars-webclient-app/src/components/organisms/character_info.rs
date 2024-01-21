@@ -23,6 +23,10 @@ use yew::prelude::*;
 
 #[derive(Properties, Clone, PartialEq)]
 pub struct Props {
+    // Character display info struct?
+    // Made of Character Portrait info,
+    // character name info, Age Display Info,
+    // Virtue Display Info, etc...
 }
 
 #[styled_component(CharacterInfo)]

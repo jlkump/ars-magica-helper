@@ -7,6 +7,7 @@ pub struct Props {
     pub soak: i32,
     pub size: i32,
     pub encumbrance: i32,
+    #[prop_or_default]
     pub class: Option<String>,
 }
 

@@ -8,6 +8,7 @@ pub struct Props {
     pub specialties: Vec<String>,
     pub scores: Vec<i32>,
     pub exps: Vec<i32>,
+    #[prop_or_default]
     pub class: Option<String>,
 }
 

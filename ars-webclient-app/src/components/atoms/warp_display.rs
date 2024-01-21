@@ -13,7 +13,9 @@ pub enum WarpIntensity {
 pub struct Props {
     pub score: i32,
     pub points: i32,
+    #[prop_or_default]
     pub class: Option<String>,
+    #[prop_or(WarpIntensity::None)]
     pub warp_intensity: WarpIntensity,
 }
 

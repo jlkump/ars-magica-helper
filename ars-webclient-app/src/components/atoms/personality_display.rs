@@ -4,7 +4,9 @@ use yew::prelude::*;
 #[derive(Properties, Clone, PartialEq)]
 pub struct Props {
     pub personality: Vec<String>,
+    #[prop_or(vec![])]
     pub scores: Vec<i32>,
+    #[prop_or_default]
     pub class: Option<String>,
 }
 
