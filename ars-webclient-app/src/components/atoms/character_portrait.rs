@@ -10,7 +10,7 @@ pub fn character_portrait(_props: &Props) -> Html {
     html! {
         <span>
             <div class="center prevent-select">
-                <img width="128" height="128" src="https://jlkump.github.io/images/personal-art/Digital-magic-aura.png" />
+                <img width="64" height="64" src="https://jlkump.github.io/images/personal-art/Digital-magic-aura.png" />
             </div>
         </span>
     }

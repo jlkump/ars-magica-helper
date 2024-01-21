@@ -4,6 +4,8 @@ use crate::components::atoms::{
     character_portrait::CharacterPortrait,
     decrepitude_display::DecrepitudeDisplay,
     warp_display::WarpDisplay,
+    warp_display::WarpIntensity,
+    wound_display::WoundDisplay,
 };
 
 use crate::components::molecules::{
@@ -32,19 +34,11 @@ pub fn character_info(_props: &Props) -> Html {
                         <div class={"grid-c-2-4 grid-r-1 center widget"}>
                             <CharacterName name="Magus Name" />
                         </div>
-                        <div class={"grid-c-1-2 grid-r-2 widget"}>
-                            <AgeDisplay true_age={25} apparent_age={25}/>
-                        </div>
-                        <div class={"grid-c-2-3 grid-r-2 widget"}>
-                            <DecrepitudeDisplay score={1} points={5}/>
-                        </div>
-                        <div class={"grid-c-3-4 grid-r-2 widget"}>
-                            <WarpDisplay score={1} points={5}/>
-                        </div>
-                        <div class={"grid-c-1-2 grid-r-3 widget"}>
-                            <h4>{"Wounds"}</h4>
-                        </div>
-                        <div class={"grid-c-2-4 grid-r-3 widget"}>
+                        <AgeDisplay true_age={1125} apparent_age={25} class="grid-c-1-2 grid-r-2 widget" />
+                        <DecrepitudeDisplay score={1} points={5} class="grid-c-2-3 grid-r-2 widget"/>
+                        <WarpDisplay score={1} points={5} warp_intensity={WarpIntensity::None} class="grid-c-3-4 grid-r-2 widget" />
+                        <WoundDisplay light={1} medium={0} heavy={0} incapacitating={0} class={"grid-c-1-3 grid-r-3 widget"} />
+                        <div class={"grid-c-3-4 grid-r-3 widget"}>
                             <h4>{"Soak, Size, Encumbrance"}</h4>
                         </div>
                     </div>
