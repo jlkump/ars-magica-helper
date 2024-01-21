@@ -4,6 +4,7 @@ use crate::components::atoms::{
     character_portrait::CharacterPortrait,
     decrepitude_display::DecrepitudeDisplay,
     flaw_display::FlawDisplay,
+    personality_display::PersonalityDisplay,
     soak_size_display::SoakSizeDisplay,
     virtue_display::VirtueDisplay,
     warp_display::WarpDisplay,
@@ -53,21 +54,33 @@ pub fn character_info(_props: &Props) -> Html {
                             ]} class="grid-c-1-2 grid-r-1 widget" 
                         />
                         <FlawDisplay 
-                        flaws={vec![
-                            "Flaw 1".to_owned(), 
-                            "Flaw 2".to_owned(), 
-                            "Flaw 3".to_owned()
-                        ]} class="grid-c-2-3 grid-r-1 widget" 
-                    />
+                            flaws={vec![
+                                "Flaw 1".to_owned(), 
+                                "Flaw 2".to_owned(), 
+                                "Flaw 3".to_owned()
+                            ]} class="grid-c-2-3 grid-r-1 widget" 
+                        />
+                        <PersonalityDisplay 
+                            personality={vec![
+                                "Personality 1".to_owned(), 
+                                "Personality 2".to_owned(), 
+                                "Personality 3".to_owned()
+                            ]} 
+                            scores={vec![
+                                1,
+                                -3
+                            ]}
+                            class="grid-c-1-2 grid-r-2 widget" 
+                        />
                         // <div class="grid-c-1-2 grid-r-1 widget">
                         //     <h4>{"Virtues"}</h4>
                         // </div>
                         // <div class="grid-c-2-3 grid-r-1 widget">
                         //     <h4>{"Flaws"}</h4>
                         // </div>
-                        <div class="grid-c-1-2 grid-r-2 widget">
-                            <h4>{"Personality"}</h4>
-                        </div>
+                        // <div class="grid-c-1-2 grid-r-2 widget">
+                        //     <h4>{"Personality"}</h4>
+                        // </div>
                         <div class="grid-c-2-3 grid-r-2 widget">
                             <h4>{"Reputation"}</h4>
                         </div>
