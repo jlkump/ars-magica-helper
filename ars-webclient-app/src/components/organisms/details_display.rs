@@ -1,5 +1,10 @@
+use crate::components::atoms:: {
+    ars_button::ArsButton,
+};
+
 use stylist::yew::styled_component;
 use yew::prelude::*;
+
 
 #[derive(Properties, Clone, PartialEq)]
 pub struct Props {
@@ -14,6 +19,7 @@ pub fn details_display(_props: &Props) -> Html {
             </div>
             <div class="grid-r-2 widget">
                 <h3>{"Select View"}</h3>
+                <ArsButton label="Test"/>
             </div>
         </div>
     }

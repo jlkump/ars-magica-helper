@@ -85,18 +85,6 @@ pub fn character_info(_props: &Props) -> Html {
                             ]}
                             class="grid-c-2-3 grid-r-2 widget"    
                         />
-                        // <div class="grid-c-1-2 grid-r-1 widget">
-                        //     <h4>{"Virtues"}</h4>
-                        // </div>
-                        // <div class="grid-c-2-3 grid-r-1 widget">
-                        //     <h4>{"Flaws"}</h4>
-                        // </div>
-                        // <div class="grid-c-1-2 grid-r-2 widget">
-                        //     <h4>{"Personality"}</h4>
-                        // </div>
-                        // <div class="grid-c-2-3 grid-r-2 widget">
-                        //     <h4>{"Reputation"}</h4>
-                        // </div>
                     </div>
                 </div>
 

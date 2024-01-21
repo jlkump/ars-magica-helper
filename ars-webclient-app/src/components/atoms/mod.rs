@@ -1,4 +1,5 @@
 pub mod age_display;
+pub mod ars_button;
 pub mod character_name;
 pub mod character_portrait;
 pub mod decrepitude_display;
