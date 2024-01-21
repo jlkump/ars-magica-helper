@@ -24,6 +24,29 @@ body {
     flex-direction: column;
 }
 
+button {
+    background: #CCB193;
+    padding: 8px 10px;
+    border-radius: 25%;
+    border: 3px solid #29190D;
+    box-shadow: 0 9px #29190D;
+    margin: 7px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+}
+
+button:hover {
+    background-color: #e4d5c5; /* Green */
+    color: white;
+}
+
+button:active {
+    background-color: #e4d5c5;
+    box-shadow: 0 5px #29190D;
+    transform: translateY(4px);
+}
+
 img {
     border-radius: 10%;
     pointer-events: none
