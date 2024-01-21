@@ -28,13 +28,13 @@ pub fn warp_display(props: &Props) -> Html {
 
     html! {
         <div class={class_str}>
-            <h3 class="center">{"Warping"}</h3>
             <table class="center position-relative warp">
-                <tr>
+                <h3 class="z-ind-2">{"Warping"}</h3>
+                <tr class="z-ind-2">
                     <td class="no-border"><p>{"Score: "}</p></td>
                     <td class="no-border"><p>{props.score}</p></td>
                 </tr>
-                <tr>
+                <tr class="z-ind-2">
                     <td class="no-border"><p>{"Points: "}</p></td>
                     <td class="no-border"><p>{props.points}</p></td>
                 </tr>

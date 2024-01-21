@@ -303,7 +303,7 @@ th, td {
 
 .warp-bubble {
     position: absolute;
-    top: -15px;
+    top: 12px;
     left: 30px;
     width: 70px;
     height: 70px;
@@ -312,6 +312,7 @@ th, td {
     pointer-events: none;
     transform-origin: center;
     animation: warp-bubble-anim 5s linear infinite;
+    z-index: 1;
 }
 
 .warp span:nth-child(2) {
@@ -355,4 +356,8 @@ th, td {
     font-weight: bold;
     font-size: medium;
     color: #A269A8;
+}
+
+.z-ind-2 {
+    z-index: 2;
 }
