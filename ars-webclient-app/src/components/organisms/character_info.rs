@@ -3,6 +3,7 @@ use crate::components::atoms::{
     character_name::CharacterName, 
     character_portrait::CharacterPortrait,
     decrepitude_display::DecrepitudeDisplay,
+    soak_size_display::SoakSizeDisplay,
     warp_display::WarpDisplay,
     warp_display::WarpIntensity,
     wound_display::WoundDisplay,
@@ -38,9 +39,7 @@ pub fn character_info(_props: &Props) -> Html {
                         <DecrepitudeDisplay score={1} points={5} class="grid-c-2-3 grid-r-2 widget"/>
                         <WarpDisplay score={1} points={5} warp_intensity={WarpIntensity::None} class="grid-c-3-4 grid-r-2 widget" />
                         <WoundDisplay light={1} medium={0} heavy={0} incapacitating={0} class={"grid-c-1-3 grid-r-3 widget"} />
-                        <div class={"grid-c-3-4 grid-r-3 widget"}>
-                            <h4>{"Soak, Size, Encumbrance"}</h4>
-                        </div>
+                        <SoakSizeDisplay soak={1} size={1} encumbrance={1} class={"grid-c-3-4 grid-r-3 widget"} />
                     </div>
 
                     <div class={"margin-small-top display-grid-2 grid-r-2"}>

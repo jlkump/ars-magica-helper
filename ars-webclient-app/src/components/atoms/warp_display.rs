@@ -36,15 +36,15 @@ pub fn warp_display(props: &Props) -> Html {
                     <td class="no-border"><p>{"Points: "}</p></td>
                     <td class="no-border"><p>{props.points}</p></td>
                 </tr>
-                if (props.warp_intensity == WarpIntensity::Weak 
+                if props.warp_intensity == WarpIntensity::Weak 
                     || props.warp_intensity == WarpIntensity::Strong 
-                    || props.warp_intensity == WarpIntensity::Intense) {
+                    || props.warp_intensity == WarpIntensity::Intense {
                     <span class="warp-bubble" />
                 }
-                if (props.warp_intensity == WarpIntensity::Strong || props.warp_intensity == WarpIntensity::Intense) {
+                if props.warp_intensity == WarpIntensity::Strong || props.warp_intensity == WarpIntensity::Intense {
                     <span class="warp-bubble" />
                 }
-                if (props.warp_intensity == WarpIntensity::Intense) {
+                if props.warp_intensity == WarpIntensity::Intense {
                     <span class="warp-bubble" />
                 }
             </table>
