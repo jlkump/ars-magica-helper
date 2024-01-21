@@ -3,7 +3,9 @@ use crate::components::atoms::{
     character_name::CharacterName, 
     character_portrait::CharacterPortrait,
     decrepitude_display::DecrepitudeDisplay,
+    flaw_display::FlawDisplay,
     soak_size_display::SoakSizeDisplay,
+    virtue_display::VirtueDisplay,
     warp_display::WarpDisplay,
     warp_display::WarpIntensity,
     wound_display::WoundDisplay,
@@ -43,12 +45,26 @@ pub fn character_info(_props: &Props) -> Html {
                     </div>
 
                     <div class={"margin-small-top display-grid-2 grid-r-2"}>
-                        <div class="grid-c-1-2 grid-r-1 widget">
-                            <h4>{"Virtues"}</h4>
-                        </div>
-                        <div class="grid-c-2-3 grid-r-1 widget">
-                            <h4>{"Flaws"}</h4>
-                        </div>
+                        <VirtueDisplay 
+                            virtues={vec![
+                                "Virtue 1".to_owned(), 
+                                "Virtue 2".to_owned(), 
+                                "Virtue 3".to_owned()
+                            ]} class="grid-c-1-2 grid-r-1 widget" 
+                        />
+                        <FlawDisplay 
+                        flaws={vec![
+                            "Flaw 1".to_owned(), 
+                            "Flaw 2".to_owned(), 
+                            "Flaw 3".to_owned()
+                        ]} class="grid-c-2-3 grid-r-1 widget" 
+                    />
+                        // <div class="grid-c-1-2 grid-r-1 widget">
+                        //     <h4>{"Virtues"}</h4>
+                        // </div>
+                        // <div class="grid-c-2-3 grid-r-1 widget">
+                        //     <h4>{"Flaws"}</h4>
+                        // </div>
                         <div class="grid-c-1-2 grid-r-2 widget">
                             <h4>{"Personality"}</h4>
                         </div>

@@ -314,9 +314,6 @@ th, td {
     animation: warp-bubble-anim 5s linear infinite;
 }
 
-.warp span:nth-child(1) {
-}
-
 .warp span:nth-child(2) {
     animation-direction: reverse;
     animation-duration: 3s;
