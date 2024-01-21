@@ -5,6 +5,7 @@ use crate::components::atoms::{
     decrepitude_display::DecrepitudeDisplay,
     flaw_display::FlawDisplay,
     personality_display::PersonalityDisplay,
+    reputation_display::ReputationDisplay,
     soak_size_display::SoakSizeDisplay,
     virtue_display::VirtueDisplay,
     warp_display::WarpDisplay,
@@ -72,6 +73,18 @@ pub fn character_info(_props: &Props) -> Html {
                             ]}
                             class="grid-c-1-2 grid-r-2 widget" 
                         />
+                        <ReputationDisplay
+                            reputations={vec![
+                                "Reputation 1".to_owned(), 
+                                "Reputation 2".to_owned(), 
+                                "Reputation 3".to_owned()
+                            ]} 
+                            scores={vec![
+                                2,
+                                -1
+                            ]}
+                            class="grid-c-2-3 grid-r-2 widget"    
+                        />
                         // <div class="grid-c-1-2 grid-r-1 widget">
                         //     <h4>{"Virtues"}</h4>
                         // </div>
@@ -81,9 +94,9 @@ pub fn character_info(_props: &Props) -> Html {
                         // <div class="grid-c-1-2 grid-r-2 widget">
                         //     <h4>{"Personality"}</h4>
                         // </div>
-                        <div class="grid-c-2-3 grid-r-2 widget">
-                            <h4>{"Reputation"}</h4>
-                        </div>
+                        // <div class="grid-c-2-3 grid-r-2 widget">
+                        //     <h4>{"Reputation"}</h4>
+                        // </div>
                     </div>
                 </div>
 

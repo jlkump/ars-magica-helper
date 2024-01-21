@@ -4,6 +4,7 @@ pub mod character_portrait;
 pub mod decrepitude_display;
 pub mod flaw_display;
 pub mod personality_display;
+pub mod reputation_display;
 pub mod soak_size_display;
 pub mod virtue_display;
 pub mod warp_display;
