@@ -9,27 +9,89 @@ tfoot, thead, tr, th, td, article, aside,
 canvas, details, embed, figure, figcaption,
 footer, header, hgroup, menu, nav, output, ruby,
 section, summary, time, mark, audio, video {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  font-size: 100%;
-  font: inherit;
-  vertical-align: baseline; 
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline; 
+    color: var(--text-default);
+    font-family: var(--font-default);
+}
+
+.theme-dark {
+    --font-default: 'Times New Roman', Times, serif;
+    --text-default: #bccad8;
+    --text-soft: #aab3ca;
+    --text-faint: #4e5b6f;
+    --text-html-link: #bf5e5e;
+    --text-highlight: #7a141466;
+    --hover-highlight: rgba(168, 60, 60, 0.4);
+    --list-bullet-color: #883737;
+    --list-number-color: #883737;
+    --list-line-color: #283846;
+    --background-blockquote: #10161d;
+    --border-blockquote: #252c36;
+    --code-background: #232831;
+    --code-text: #fa4545;
+    --background-button: #7c2929;
+    --border-button: #652121;
+    --hvr-button: #642828;
+    --active-button: #642828;
+    --hr-border-line: #3c5274;
+    --progress-bar-value-color: #863737;
+    --progress-bar-background-color: #252c36;
+    --table-header-bg-color: #652121;
+    --table-header-text-color: #e5ebee;
+    --table-header-text-edit-color: #e06c75;
+    --table-alt-row-col-color: #06080c60;
+    --comments: #4e5b6f;
+    --footnotes: #6e7e89;
+    --accent: #883737;
+    --lite-accent: #e06c75;
+    --accent-2: #3c5274;
+    --lite-accent-2: #61afef;
+    --dark-accent: #652121;
+    --deep-dark-accent: #3f1010;
+    --inactive: #586477;
+    --background-scroll: #252c36;
+    --lines: #283846;
+    --outline: #cfd7dd;
+    --foreground: #cfd7dd;
+    --background: #0b0f13;
+    --graph-lines: #571a1a;
+    --graph-node: #cfd7dd;
+    --graph-current-node: #fd737366;
+    --graph-tags: #c14343;
+    --success-bg: #32603e;
+    --failure-bg: #772d2d;
+    --highlight: #7a141466;
+    --hvr: rgba(168, 60, 60, 0.4);
+    --hvr2: var(--highlight);
+    --hvr-active: rgba(212, 47, 47, 0.4);
+    --background-primary: #1a1e24;
+    --background-secondary: var(--background);
+    --background-colored: var(--dark-accent);
+}
+
+.theme-light {
+    --font-default: Times, Times New Roman, serif;
 }
 
 body {
     /* background: rgb(181, 181, 181); */
-    background: #CCB193;
+    background: var(--background);
     display: flex;
     flex-direction: column;
 }
 
 button {
-    background: #CCB193;
+    background: var(--background-button);
     padding: 8px 10px;
-    border-radius: 10px;
-    border: 3px solid #29190D;
-    box-shadow: 0 4px #29190D;
+    border: 0 none ;
+    /* border-radius: 10px; */
+    /* border: 3px solid var(--border-button); */
+    /* box-shadow: 0 4px #29190D; */
     margin: 2px;
     text-align: center;
     text-decoration: none;
@@ -37,25 +99,17 @@ button {
 }
 
 button:hover {
-    background-color: #e4d5c5; /* Green */
-    color: white;
+    background: var(--hvr-button); /* Green */
 }
 
 button:active {
-    background-color: #e4d5c5;
-    box-shadow: 0 0px #29190D;
+    background-color: var(--active-button);
     transform: translateY(4px);
 }
 
 img {
     border-radius: 10%;
     pointer-events: none
-}
-
-p, h1, h2, h3, h4, h5, h6 {
-    font-family: Times, Times New Roman, serif;
-    color: #2e1400;
-    font-weight: bold;
 }
 
 p {
@@ -65,7 +119,11 @@ p {
 
 h1, h2, h3, h4, h5, h6 {
     text-align: center;
-    font-size: 24pt;
+    font-weight: bolder;
+}
+
+h1 {
+    font-size: 30pt;
 }
 
 h2 {
@@ -98,6 +156,26 @@ th, td {
     border: 3px solid #29190D;
     padding: 2px;
     vertical-align: middle;
+}
+
+/* width */
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: var(--background-scroll); 
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: var(--accent); 
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: var(--dark-accent); 
 }
 
 /* This might be a good option to put in code for variable height */
@@ -197,6 +275,14 @@ th, td {
     margin-top: 10px;
 }
 
+.margin-top {
+    margin-top: 20px;
+}
+
+.margin-right {
+    margin-right: 30px;
+}
+
 .display-grid-1-1 {
     display: grid;
     grid-auto-columns: minmax(100px, auto);
@@ -274,38 +360,49 @@ th, td {
     grid-row: 3;
 }
 
+.sidebar ul {
+    left: 0px;
+    width: 20%;
+    height: 100%;
+    position: fixed;
+    overflow: auto;
+}
+
+.sidebar li {
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    vertical-align: middle;
+}
+
+.sidebar li > h2 {
+    padding-left: 10px;
+}
+
 .navbar ul {
     list-style-type: none;
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background-color: #4b3a3a;
+    /* background-color: var(--background-primary); */
+    background-image: linear-gradient(to right, var(--background-colored), var(--background-primary));
     display: flex;
     align-items: center;
     vertical-align: middle;
     flex-wrap: nowrap;
+    position: sticky;
+    position: -webkit-sticky; /* For Safari*/
+    top: 0;
+    width: 100%;
 }
 
-.navbar .left-align li {
+.navbar li {
     float: left;
+    padding: 10px;
 }
 
-.navbar li a {
-    display: inline-block;
-    color: white;
-    text-align: center;
-    padding: 14px 16px;
-    text-decoration: none;
-}
-
-.navbar li a:hover {
-    background-color: #111;
-}
-
-.navbar .icon {
-    margin-top: 10px;
-    margin-right: 10px;
-    margin-left: 10px;
+.right {
+    margin-left: auto;
 }
 
 .widget {
