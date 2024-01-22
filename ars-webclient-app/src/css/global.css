@@ -26,6 +26,7 @@ section, summary, time, mark, audio, video {
     --text-faint: #4e5b6f;
     --text-html-link: #bf5e5e;
     --text-highlight: #7a141466;
+    --text-color: #7c2929;
     --hover-highlight: rgba(168, 60, 60, 0.4);
     --list-bullet-color: #883737;
     --list-number-color: #883737;
@@ -113,7 +114,7 @@ img {
 }
 
 p {
-    font-size: 12pt;
+    font-size: 11pt;
     text-align: left;
 }
 
@@ -127,23 +128,23 @@ h1 {
 }
 
 h2 {
-    font-size: 20pt;
+    font-size: 28pt;
 }
 
 h3 {
-    font-size: 18pt;
+    font-size: 22pt;
 }
 
 h4 {
-    font-size: 16pt;
+    font-size: 18pt;
 }
 
 h5 {
-    font-size: 14pt;
+    font-size: 16pt;
 }
 
 h6 {
-    font-size: 12pt;
+    font-size: 14pt;
 }
 
 table {
@@ -153,7 +154,7 @@ table {
 }
 
 th, td {
-    border: 3px solid #29190D;
+    border: 0px solid #29190D;
     padding: 2px;
     vertical-align: middle;
 }
@@ -180,15 +181,15 @@ th, td {
 
 /* This might be a good option to put in code for variable height */
 .table-container {
-    height: 300px;
     overflow-y: scroll;
-    -ms-overflow-style: none;  /* Internet Explorer 10+ */
-    scrollbar-width: none;  /* Firefox */
+    /* height: 300px; */
+    /* -ms-overflow-style: none;  Internet Explorer 10+ */
+    /* scrollbar-width: none;   Firefox */
 }
 
-.table-container::-webkit-scrollbar {
+/* .table-container::-webkit-scrollbar {
     display: none;
-}
+} */
 
 .text-center {
     text-align: center;
@@ -204,6 +205,10 @@ th, td {
 
 .text-large {
     font-size: 14pt;
+}
+
+.text-colored {
+    color: var(--text-color);
 }
 
 .underlined {
@@ -407,8 +412,12 @@ th, td {
 
 .widget {
     padding: 10px;
-    background: #5C4540;
-    border: 3px solid #29190D;
+    /* background: #5C4540;
+    border: 3px solid #29190D; */
+}
+
+.content {
+    background-color: var(--background-primary);
 }
 
 .no-padding {
@@ -417,6 +426,21 @@ th, td {
 
 .no-border {
     border: 0px;
+}
+
+.top-left-border {
+    position: relative;
+    border: double 4px transparent;
+    border-radius: 20px;
+    background-image: 
+    linear-gradient(var(--background-primary), var(--background-primary)), 
+    radial-gradient(
+        circle at top left, 
+        var(--accent) 0%, 
+        rgba(0, 0, 0, 0) 50%
+    );
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
 }
 
 /* Warpping display */

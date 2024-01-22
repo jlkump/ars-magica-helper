@@ -11,8 +11,8 @@ pub fn character_name(props: &Props) -> Html {
     
     html! {
         <span>
-            <div class="center prevent-select widget-container">
-                <h2>{props.name.clone()}</h2>
+            <div>
+                <h2 class="text-colored">{props.name.clone()}</h2>
             </div>
         </span>
     }
