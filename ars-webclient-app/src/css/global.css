@@ -365,7 +365,7 @@ th, td {
     width: 20%;
     height: 100%;
     position: fixed;
-    overflow: auto;
+    overflow: scroll;
 }
 
 .sidebar li {
