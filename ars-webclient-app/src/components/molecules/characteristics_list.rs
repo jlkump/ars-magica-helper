@@ -6,6 +6,7 @@ pub struct Props {
     pub chars: Vec<String>,
     pub scores: Vec<i32>,
     pub ages: Vec<i32>,
+    #[prop_or_default]
     pub class: Option<String>,
 }
 
@@ -13,14 +14,18 @@ pub struct Props {
 pub fn characteristics_list(props: &Props) -> Html {
     
     html! {
-        <table class={&props.class}>
-            <thead>
-            <th><h4 class="text-center">{"Characteristic"}</h4></th>
-            <th><h4 class="text-center">{"Score"}</h4></th>
-            <th><h4 class="text-center">{"Age"}</h4></th>
-            </thead>
-            {table_data(&props.chars, &props.scores, &props.ages)}
-        </table>
+        <div class="characteristics-container">
+            <table class={classes!(&props.class, "color")}>
+                <tr>
+                    <th><h6 class="text-center">{"Characteristic"}</h6></th>
+                    <th><h6 class="text-center">{"Score"}</h6></th>
+                    <th><h6 class="text-center">{"Age"}</h6></th>
+                </tr>
+                {table_data(&props.chars, &props.scores, &props.ages)}
+            </table>
+        </div>
+        // <div>
+        // </div>
     }
 }
 
@@ -33,7 +38,7 @@ fn table_data(chars: &Vec<String>, scores: &Vec<i32>, ages: &Vec<i32>) -> Vec<Ht
         let age: Option<&i32> = ages.next();
         result.push(html! {
             <tr>
-                <td><p class="text-center">{characteristic}</p></td>
+                <td><p class="pad-left-small">{characteristic}</p></td>
                 if let Some(score) = score {
                     <td><p class="text-center">{score}</p></td>
                 } else {

@@ -15,15 +15,20 @@ pub struct Props {
 #[styled_component(AbilitiesList)]
 pub fn abilities_list(props: &Props) -> Html {
     html! {
-        <table class={&props.class}>
-            <thead>
-            <th><h4 class="text-center">{"Name"}</h4></th>
-            <th><h5 class="text-center">{"Specialty"}</h5></th>
-            <th><h4 class="text-center">{"Score"}</h4></th>
-            <th><h4 class="text-center">{"Exp"}</h4></th>
-            </thead>
-            {table_data(&props.names, &props.specialties, &props.scores, &props.exps)}
-        </table>
+        <div class="abilities-container">
+            <table class={classes!(&props.class, "color")}>
+                <tr>
+                    <th colspan="4"><h5>{"Abilities"}</h5></th>
+                </tr>
+                <tr>
+                    <td><h6 class="underlined text-center">{"Name"}</h6></td>
+                    <td><h6 class="underlined text-center">{"Specialty"}</h6></td>
+                    <td><h6 class="underlined text-center">{"Score"}</h6></td>
+                    <td><h6 class="underlined text-center">{"Exp"}</h6></td>
+                </tr>
+                {table_data(&props.names, &props.specialties, &props.scores, &props.exps)}
+            </table>
+        </div>
     }
 }
 

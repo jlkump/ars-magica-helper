@@ -57,7 +57,7 @@ fn table_data(props: &Props, edit_buttons: bool) -> Vec<Html> {
                 <tr>
                     <td><p>{wound_text}</p></td>
                     {wound_cell(edit_buttons, wounds)}
-                    <td><p class="text-center">{wound_pen}</p></td>
+                    <td><p class="text-center">{wound_pen * wounds}</p></td>
                 </tr>
             });
             sum_penalty += wounds * wound_pen;

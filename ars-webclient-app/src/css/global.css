@@ -528,6 +528,18 @@ hr {
     overflow-y: scroll;
 }
 
+.characteristics-container {
+    width: 100%;
+    height: 250px;
+    overflow-y: scroll;
+}
+
+.abilities-container {
+    width: 100%;
+    height: 350px;
+    overflow-y: scroll;
+}
+
 /* Warpping display */
 .warp-circle {
     margin: 5px;
