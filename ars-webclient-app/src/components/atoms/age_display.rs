@@ -19,15 +19,15 @@ pub fn age_display(props: &Props) -> Html {
 
     html! {
         <div class={class_str}>
-            <h3 class="center">{"Age"}</h3>
+            // <h3 class="center">{"Age"}</h3>
             <table class="center">
                 <tr>
-                    <td class="no-border"><p>{"True: "}</p></td>
-                    <td class="no-border"><p>{props.true_age}</p></td>
+                    <td class="no-border"><p>{"True Age: "}</p></td>
+                    <td class="no-border pad-left-small"><p class="text-center">{props.true_age}</p></td>
                 </tr>
                 <tr>
-                    <td class="no-border"><p>{"Apparent: "}</p></td>
-                    <td class="no-border"><p>{props.apparent_age}</p></td>
+                    <td class="no-border"><p>{"Apparent Age: "}</p></td>
+                    <td class="no-border pad-left-small"><p class="text-center">{props.apparent_age}</p></td>
                 </tr>
             </table>
         </div>

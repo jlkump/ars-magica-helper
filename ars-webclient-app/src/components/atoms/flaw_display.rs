@@ -1,5 +1,6 @@
 use stylist::yew::styled_component;
 use yew::prelude::*;
+use yew_icons::{Icon, IconId};
 
 #[derive(Properties, Clone, PartialEq)]
 pub struct Props {
@@ -13,15 +14,12 @@ pub fn flaw_display(props: &Props) -> Html {
     
     html! {
         <div class={&props.class}>        
-            <h3>{"Flaws"}</h3>
-            <table>
-                // <thead>
-                // <th><h4 class="text-center">{"Virtues"}</h4></th>
-                // <th><h4 class="text-center">{"Score"}</h4></th>
-                // <th><h4 class="text-center">{"Age"}</h4></th>
-                // </thead>
-                {table_data(&props.flaws)}
-            </table>
+            <h5 class="underlined">{"Flaws"}</h5>
+            <div class="virtue-flaw-container">
+                <table>
+                    {table_data(&props.flaws)}
+                </table>
+            </div>
         </div>
     }
 }
@@ -31,7 +29,10 @@ fn table_data(flaws: &Vec<String>) -> Vec<Html> {
     for flaw in flaws {
         result.push(html! {
             <tr>
-                <td><p class="text-center">{flaw}</p></td>
+                <td class="flex">
+                    <p class="pad-left-small">{flaw}</p>
+                    <Icon icon_id={IconId::HeroiconsMiniSolidLink} class="right size-x-small"/>
+                </td>
             </tr>
           });
     }

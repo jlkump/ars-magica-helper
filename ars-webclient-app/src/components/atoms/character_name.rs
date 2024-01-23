@@ -10,10 +10,8 @@ pub struct Props {
 pub fn character_name(props: &Props) -> Html {
     
     html! {
-        <span>
-            <div>
-                <h2 class="text-colored">{props.name.clone()}</h2>
-            </div>
-        </span>
+        <div class="name-label">
+            <h2 class="text-colored">{props.name.clone()}</h2>
+        </div>
     }
 }

@@ -8,10 +8,6 @@ pub struct Props {}
 pub fn character_portrait(_props: &Props) -> Html {
     
     html! {
-        <span>
-            <div class="center prevent-select">
-                <img width="64" height="64" src="https://jlkump.github.io/images/personal-art/Digital-magic-aura.png" />
-            </div>
-        </span>
+        <img class="portrait prevent-select" width="128px" src="https://jlkump.github.io/images/personal-art/Digital-magic-aura.png" />
     }
 }

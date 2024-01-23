@@ -8,7 +8,7 @@ form, label, legend, table, caption, tbody,
 tfoot, thead, tr, th, td, article, aside,
 canvas, details, embed, figure, figcaption,
 footer, header, hgroup, menu, nav, output, ruby,
-section, summary, time, mark, audio, video {
+section, summary, time, mark, audio, video, button {
     margin: 0;
     padding: 0;
     border: 0;
@@ -17,6 +17,7 @@ section, summary, time, mark, audio, video {
     vertical-align: baseline; 
     color: var(--text-default);
     font-family: var(--font-default);
+    text-align: left;
 }
 
 .theme-dark {
@@ -42,10 +43,6 @@ section, summary, time, mark, audio, video {
     --hr-border-line: #3c5274;
     --progress-bar-value-color: #863737;
     --progress-bar-background-color: #252c36;
-    --table-header-bg-color: #652121;
-    --table-header-text-color: #e5ebee;
-    --table-header-text-edit-color: #e06c75;
-    --table-alt-row-col-color: #06080c60;
     --comments: #4e5b6f;
     --footnotes: #6e7e89;
     --accent: #883737;
@@ -59,7 +56,6 @@ section, summary, time, mark, audio, video {
     --lines: #283846;
     --outline: #cfd7dd;
     --foreground: #cfd7dd;
-    --background: #0b0f13;
     --graph-lines: #571a1a;
     --graph-node: #cfd7dd;
     --graph-current-node: #fd737366;
@@ -70,9 +66,15 @@ section, summary, time, mark, audio, video {
     --hvr: rgba(168, 60, 60, 0.4);
     --hvr2: var(--highlight);
     --hvr-active: rgba(212, 47, 47, 0.4);
+    --background: #0b0f13;
     --background-primary: #1a1e24;
-    --background-secondary: var(--background);
+    --background-secondary: #283846;
     --background-colored: var(--dark-accent);
+
+    --table-header-bg-color: #652121;
+    --table-header-bg-color-two: #491919;
+    --table-cell-bg-one: #283846;
+    --table-cell-bg-two: transparent;
 }
 
 .theme-light {
@@ -90,13 +92,15 @@ button {
     background: var(--background-button);
     padding: 8px 10px;
     border: 0 none ;
-    /* border-radius: 10px; */
-    /* border: 3px solid var(--border-button); */
+    border: 1px solid var(--border-button);
     /* box-shadow: 0 4px #29190D; */
     margin: 2px;
-    text-align: center;
+    vertical-align: middle;
+    align-content: center;
+    align-self: center;
     text-decoration: none;
     display: inline-block;
+    text-align: center;
 }
 
 button:hover {
@@ -113,9 +117,12 @@ img {
     pointer-events: none
 }
 
+.portrait img {
+    width: minmax(100px, 200px);
+}
+
 p {
     font-size: 11pt;
-    text-align: left;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -150,13 +157,34 @@ h6 {
 table {
     width: 100%;
     border-collapse: collapse;
-    /* border: 3px dotted #29190D; */
 }
 
 th, td {
-    border: 0px solid #29190D;
     padding: 2px;
     vertical-align: middle;
+    /* background: var(--background-secondary); */
+}
+
+.color {
+    gap: 20px;
+    border-collapse: separate;
+    border: 2px solid var(--accent-2);
+}
+
+.color th {
+    background: var(--table-header-bg-color-two);
+}
+
+.color th:nth-child(odd) {
+    background: var(--table-header-bg-color);
+}
+
+.color tr {
+    background: var(--table-cell-bg-one);
+}
+
+.color tr:nth-child(odd) {
+    background: var(--table-cell-bg-two);
 }
 
 /* width */
@@ -195,6 +223,18 @@ th, td {
     text-align: center;
 }
 
+.vert-center {
+    vertical-align: middle;
+    align-content: center;
+    align-self: center;
+}
+
+.plus-minus-button {
+    padding: 1px;
+    margin-left: 4px;
+    margin-right: 4px;
+}
+
 .text-left {
     text-align: left;
 }
@@ -211,6 +251,18 @@ th, td {
     color: var(--text-color);
 }
 
+.text-bold {
+    font-weight: bold;
+}
+
+.underlined {
+    text-decoration: underline;
+}
+
+.pad-left-small {
+    padding-left: 10px;
+}
+
 .underlined {
     text-decoration: underline;
 }
@@ -221,19 +273,16 @@ th, td {
     user-select: none; /* Standard syntax */
 }
 
-.center {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    vertical-align: middle;
+.block {
+    display: block;
 }
 
-.center-row {
+.inline-block {
+    display: inline-block;
+}
+
+.flex {
     display: flex;
-    flex-direction: row;
-    justify-content: left;
-    align-items: center;
 }
 
 .half-flex {
@@ -286,6 +335,16 @@ th, td {
 
 .margin-right {
     margin-right: 30px;
+}
+
+.size-small {
+    width: 20px;
+    height: 20px;
+}
+
+.size-x-small {
+    width: 15px;
+    height: 15px;
 }
 
 .display-grid-1-1 {
@@ -365,12 +424,17 @@ th, td {
     grid-row: 3;
 }
 
-.sidebar ul {
+.sidebar {
+    background: var(--background);
     left: 0px;
     width: 20%;
     height: 100%;
     position: fixed;
+    z-index: 40;
     overflow: scroll;
+}
+
+.sidebar ul {
 }
 
 .sidebar li {
@@ -395,10 +459,11 @@ th, td {
     align-items: center;
     vertical-align: middle;
     flex-wrap: nowrap;
-    position: sticky;
     position: -webkit-sticky; /* For Safari*/
+    position: sticky;
     top: 0;
     width: 100%;
+    z-index: 40;
 }
 
 .navbar li {
@@ -406,15 +471,22 @@ th, td {
     padding: 10px;
 }
 
+div .name-label {
+    padding: 10px;
+    vertical-align: bottom;
+    align-self: flex-end;
+    width: minmax(auto, 128px);
+}
+
+hr {
+    border: 2px solid var(--background-scroll);
+}
+
 .right {
     margin-left: auto;
 }
 
-.widget {
-    padding: 10px;
-    /* background: #5C4540;
-    border: 3px solid #29190D; */
-}
+
 
 .content {
     background-color: var(--background-primary);
@@ -429,18 +501,31 @@ th, td {
 }
 
 .top-left-border {
-    position: relative;
+    /* position: relative; */
     border: double 4px transparent;
     border-radius: 20px;
     background-image: 
     linear-gradient(var(--background-primary), var(--background-primary)), 
     radial-gradient(
         circle at top left, 
-        var(--accent) 0%, 
+        var(--text-faint) 0%, 
         rgba(0, 0, 0, 0) 50%
     );
+    z-index: 0;
     background-origin: border-box;
     background-clip: padding-box, border-box;
+}
+
+.virtue-flaw-container {
+    width: 100%;
+    height: 70px;
+    overflow-y: scroll;
+}
+
+.personality-reputation-container {
+    width: 100%;
+    height: 80px;
+    overflow-y: scroll;
 }
 
 /* Warpping display */

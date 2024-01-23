@@ -1,5 +1,6 @@
 use stylist::yew::styled_component;
 use yew::prelude::*;
+use yew_icons::{Icon, IconId};
 
 #[derive(Properties, Clone, PartialEq)]
 pub struct Props {
@@ -13,16 +14,13 @@ pub struct Props {
 pub fn virtue_display(props: &Props) -> Html {
     
     html! {
-        <div class={&props.class}>        
-            <h3>{"Virtues"}</h3>
-            <table>
-                // <thead>
-                // <th><h4 class="text-center">{"Virtues"}</h4></th>
-                // <th><h4 class="text-center">{"Score"}</h4></th>
-                // <th><h4 class="text-center">{"Age"}</h4></th>
-                // </thead>
-                {table_data(&props.virtues)}
-            </table>
+        <div class={&props.class}>
+            <h5 class="underlined">{"Virtues"}</h5>
+            <div class="virtue-flaw-container">        
+                <table>
+                    {table_data(&props.virtues)}
+                </table>
+            </div>
         </div>
     }
 }
@@ -32,7 +30,11 @@ fn table_data(virtues: &Vec<String>) -> Vec<Html> {
     for virtue in virtues {
         result.push(html! {
             <tr>
-                <td><p class="text-center">{virtue}</p></td>
+                <td class="flex">
+                    <p class="pad-left-small">{virtue}</p>
+                    <Icon icon_id={IconId::HeroiconsMiniSolidLink} class="right size-x-small"/>
+                    // <Icon icon_id={IconId::LucideMoreHorizontal} class="right size-x-small"/>
+                </td>
             </tr>
           });
     }

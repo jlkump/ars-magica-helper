@@ -18,8 +18,8 @@ pub fn decrepitude_display(props: &Props) -> Html {
 
     html! {
         <div class={class_str}>
-            <h3 class="center">{"Decrepitude"}</h3>
-            <table class="center">
+            <h5 class="underlined">{"Decrepitude"}</h5>
+            <table>
                 <tr>
                     <td class="no-border"><p>{"Score: "}</p></td>
                     <td class="no-border"><p>{props.score}</p></td>

@@ -36,59 +36,71 @@ pub fn character_info(_props: &Props) -> Html {
             // <h2>{"Character Info"}</h2>
             <div class={"display-grid-2 margin-small"}>
                 <div class={"display-grid-1 grid-r-1 grid-c-1-2"}>
-                    <div class={"display-grid-3 grid-r-1 top-left-border"}>
-                        <div class={"grid-c-1-2 grid-r-1 widget"}>
+                    <div class={"block"}>
+                        <div class={"flex"}>
                             <CharacterPortrait/>
-                        </div>
-                        <div class={"grid-c-2-4 grid-r-1 center widget"}>
                             <CharacterName name="Magus Name" />
                         </div>
-                        <AgeDisplay true_age={1125} apparent_age={25} class="grid-c-1-2 grid-r-2 widget" />
-                        <DecrepitudeDisplay score={1} points={5} class="grid-c-2-3 grid-r-2 widget"/>
-                        <WarpDisplay score={1} points={5} warp_intensity={WarpIntensity::None} class="grid-c-3-4 grid-r-2 widget" />
-                        <WoundDisplay light={1} medium={0} heavy={0} incapacitating={0} class={"grid-c-1-3 grid-r-3 widget"} />
-                        <SoakSizeDisplay soak={1} size={1} encumbrance={1} class={"grid-c-3-4 grid-r-3 widget"} />
-                    </div>
-
-                    <div class={"margin-small-top display-grid-2 grid-r-2"}>
-                        <VirtueDisplay 
-                            virtues={vec![
-                                "Virtue 1".to_owned(), 
-                                "Virtue 2".to_owned(), 
-                                "Virtue 3".to_owned()
-                            ]} class="grid-c-1-2 grid-r-1 widget" 
+                        <hr/>
+                        <div class={"flex"}>
+                            <AgeDisplay true_age={25} apparent_age={25} class="half-flex" />
+                            <SoakSizeDisplay soak={1} size={1} encumbrance={1} class="half-flex"/>
+                        </div>
+                        <hr/>
+                        <div class="flex">
+                            <DecrepitudeDisplay score={1} points={5} class="half-flex"/>
+                            <WarpDisplay score={1} points={5} class="half-flex"/>
+                        </div>
+                        <br/>
+                        <WoundDisplay 
+                            wound_names={vec!["Light".to_owned(), "Medium".to_owned(), "Heavy".to_owned(), "Incapacitating".to_owned()]} 
+                            wounds={vec![0, 1, 1, 0]}
+                            wound_penalties={vec![-1, -3, -5]}
                         />
-                        <FlawDisplay 
-                            flaws={vec![
-                                "Flaw 1".to_owned(), 
-                                "Flaw 2".to_owned(), 
-                                "Flaw 3".to_owned()
-                            ]} class="grid-c-2-3 grid-r-1 widget" 
-                        />
-                        <PersonalityDisplay 
-                            personality={vec![
-                                "Personality 1".to_owned(), 
-                                "Personality 2".to_owned(), 
-                                "Personality 3".to_owned()
-                            ]} 
-                            scores={vec![
-                                1,
-                                -3
-                            ]}
-                            class="grid-c-1-2 grid-r-2 widget" 
-                        />
-                        <ReputationDisplay
-                            reputations={vec![
-                                "Reputation 1".to_owned(), 
-                                "Reputation 2".to_owned(), 
-                                "Reputation 3".to_owned()
-                            ]} 
-                            scores={vec![
-                                2,
-                                -1
-                            ]}
-                            class="grid-c-2-3 grid-r-2 widget"    
-                        />
+                        <br/>
+                        <div class="flex">
+                            <VirtueDisplay 
+                                virtues={vec![
+                                    "Virtue 1".to_owned(), 
+                                    "Virtue 2".to_owned(), 
+                                    "Virtue 3".to_owned()
+                                ]} class="half-flex" 
+                            />
+                            <FlawDisplay 
+                                flaws={vec![
+                                    "Flaw 1".to_owned(), 
+                                    "Flaw 2".to_owned(), 
+                                    "Flaw 3".to_owned()
+                                ]} class="half-flex" 
+                            />
+                        </div>
+                        <hr/>
+                        <div class="flex">
+                            <PersonalityDisplay 
+                                personality={vec![
+                                    "Personality 1".to_owned(), 
+                                    "Personality 2".to_owned(), 
+                                    "Personality 3".to_owned()
+                                ]} 
+                                scores={vec![
+                                    1,
+                                    -3
+                                ]}
+                                class="half-flex" 
+                            />
+                            <ReputationDisplay
+                                reputations={vec![
+                                    "Reputation 1".to_owned(), 
+                                    "Reputation 2".to_owned(), 
+                                    "Reputation 3".to_owned()
+                                ]} 
+                                scores={vec![
+                                    2,
+                                    -1
+                                ]}
+                                class="half-flex"    
+                            />
+                        </div>
                     </div>
                 </div>
 

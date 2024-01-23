@@ -15,10 +15,12 @@ pub fn personality_display(props: &Props) -> Html {
     
     html! {
         <div class={&props.class}>        
-            <h3>{"Personality"}</h3>
-            <table>
-                {table_data(&props.personality, &props.scores)}
-            </table>
+            <h5 class="underlined">{"Personality"}</h5>
+            <div class="personality-reputation-container">
+                <table>
+                    {table_data(&props.personality, &props.scores)}
+                </table>
+            </div>
         </div>
     }
 }
@@ -30,7 +32,7 @@ fn table_data(personalities: &Vec<String>, scores: &Vec<i32>) -> Vec<Html> {
         let score = scores.next();
         result.push(html! {
             <tr>
-                <td><p class="text-center">{personality}</p></td>
+                <td><p>{personality}</p></td>
                 if let Some(score) = score {
                     if *score > 0 {
                         <td><p class="text-center">{format!("+{}", score)}</p></td>

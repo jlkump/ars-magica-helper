@@ -22,6 +22,6 @@ pub fn ars_button(props: &Props) -> Html {
     };
 
     html! {
-        <button {onclick} class={&props.class}><p class="center">{&props.label}</p></button>
+        <button {onclick} class={&props.class}>{&props.label}</button>
     }
 }

@@ -27,16 +27,16 @@ pub fn soak_size_display(props: &Props) -> Html {
     html! {
         <table class={&props.class}>
             <tr>
-                <td><h5>{"Size: "}</h5></td>
-                <td><h5>{size_display_str}</h5></td>
+                <td><p>{"Size: "}</p></td>
+                <td><p>{size_display_str}</p></td>
             </tr>
                 <tr>
-                <td><h5>{"Soak: "}</h5></td>
-                <td><h5>{soak_display_str}</h5></td>
+                <td><p>{"Soak: "}</p></td>
+                <td><p>{soak_display_str}</p></td>
             </tr>
             <tr>
-                <td><h5>{"Encumbrance: "}</h5></td>
-                <td><h5>{encumbrance_display_str}</h5></td>
+                <td><p>{"Encumbrance: "}</p></td>
+                <td><p>{encumbrance_display_str}</p></td>
             </tr>
         </table>
     }

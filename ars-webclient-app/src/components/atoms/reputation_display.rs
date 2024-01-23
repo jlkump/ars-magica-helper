@@ -15,10 +15,12 @@ pub fn reputation_display(props: &Props) -> Html {
     
     html! {
         <div class={&props.class}>        
-            <h3>{"Reputation"}</h3>
-            <table>
-                {table_data(&props.reputations, &props.scores)}
-            </table>
+            <h5>{"Reputation"}</h5>
+            <div class="personality-reputation-container">
+                <table>
+                    {table_data(&props.reputations, &props.scores)}
+                </table>
+            </div>
         </div>
     }
 }
@@ -30,7 +32,7 @@ fn table_data(reputations: &Vec<String>, scores: &Vec<i32>) -> Vec<Html> {
         let score = scores.next();
         result.push(html! {
             <tr>
-                <td><p class="text-center">{reputation}</p></td>
+                <td><p class="pad-left-small">{reputation}</p></td>
                 if let Some(score) = score {
                     if *score > 0 {
                         <td><p class="text-center">{format!("+{}", score)}</p></td>
