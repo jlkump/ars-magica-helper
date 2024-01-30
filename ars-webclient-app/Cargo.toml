@@ -25,4 +25,7 @@ yew_icons = { version = "0.8.0", features = [
     "FontAwesomeSolidEye", "FontAwesomeSolidEyeLowVision",
     "FontAwesomeSolidHammer", "LucideCoins", 
     "BootstrapFileTextFill", "FontAwesomeSolidSignsPost",
-    "LucideMenu", "HeroiconsMiniSolidLink", "LucideMoreHorizontal"] }
+    "LucideMenu", "HeroiconsMiniSolidLink", "LucideMoreHorizontal",
+    "FontAwesomeSolidTimeline", "LucideBoxes", "HeroiconsMiniSolidRectangleGroup",
+    "BootstrapPlusSlashMinus", "FontAwesomeSolidPlusMinus", "FontAwesomeSolidBolt",
+    "FontAwesomeSolidFlaskVial", "BootstrapJournalText"] }

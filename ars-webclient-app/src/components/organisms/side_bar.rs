@@ -67,6 +67,13 @@ pub fn side_bar(_props: &Props) -> Html {
                 <li>
                     <Icon icon_id={IconId::OcticonsX16} />
                 </li>
+                <li>
+                    <Icon icon_id={IconId::FontAwesomeSolidTimeline} />
+                </li>
+                <li>
+                    <Icon icon_id={IconId::FontAwesomeSolidTimeline} />
+                </li>
+                <li><div></div></li>
             </ul>
         </div>
     }

@@ -94,7 +94,7 @@ button {
     border: 0 none ;
     border: 1px solid var(--border-button);
     /* box-shadow: 0 4px #29190D; */
-    margin: 2px;
+    margin: 3px;
     vertical-align: middle;
     align-content: center;
     align-self: center;
@@ -114,6 +114,7 @@ button:active {
 
 img {
     border-radius: 10%;
+    border: 3px solid var(--accent-2);
     pointer-events: none
 }
 
@@ -337,6 +338,10 @@ th, td {
     margin-right: 30px;
 }
 
+.padding-small {
+    padding: 10px;
+}
+
 .size-small {
     width: 20px;
     height: 20px;
@@ -345,83 +350,6 @@ th, td {
 .size-x-small {
     width: 15px;
     height: 15px;
-}
-
-.display-grid-1-1 {
-    display: grid;
-    grid-auto-columns: minmax(100px, auto);
-    grid-template-rows: 1fr;
-    gap: 0px;
-}
-
-.display-grid-1-2 {
-    display: grid;
-    grid-auto-columns: minmax(100px, auto);
-    grid-template-rows: 1fr 1fr;
-    gap: 10px;
-}
-
-.display-grid-1-special {
-    display: grid;
-    grid-auto-columns: minmax(100px, auto);
-    gap: 10px;
-    grid-template-rows: 70% 1fr;
-}
-
-.display-grid-2 {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    grid-auto-rows: minmax(100px, auto);
-}
-
-.display-grid-3 {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    grid-auto-rows: minmax(100px, auto);
-}
-
-.details-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-auto-rows: minmax(10px, auto);
-}
-
-.grid-c-1-2 {
-    grid-column: 1 / 2;
-}
-
-.grid-c-1-3 {
-    grid-column: 1 / 3;
-}
-
-.grid-c-2-3 {
-    grid-column: 2 / 3;
-}
-
-.grid-c-3-4 {
-    grid-column: 3 / 4;
-}
-
-.grid-c-2-4 {
-    grid-column: 2 / 4; 
-}
-
-.grid-c-4-5 {
-    grid-column: 4 / 5;
-}
-
-.grid-r-1 {
-    grid-row: 1;
-}
-
-.grid-r-2 {
-    grid-row: 2;
-}
-
-.grid-r-3 {
-    grid-row: 3;
 }
 
 .sidebar {
@@ -471,6 +399,44 @@ th, td {
     padding: 10px;
 }
 
+.view-select {
+}
+
+.view-select ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    vertical-align: middle;
+    justify-content: center;
+}
+
+.view-select li {
+    /* float: left; */
+    padding: 12px;
+    margin: 10px;
+    background: var(--background-secondary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.view-select li:hover {
+    background: var(--background-scroll);
+}
+
+.view-select .selected {
+    background: var(--background-button);
+}
+
+.view-select .selected:hover {
+    background: var(--border-button);
+}
+
 div .name-label {
     padding: 10px;
     vertical-align: bottom;
@@ -485,7 +451,6 @@ hr {
 .right {
     margin-left: auto;
 }
-
 
 
 .content {
@@ -530,15 +495,25 @@ hr {
 
 .characteristics-container {
     width: 100%;
-    height: 250px;
-    overflow-y: scroll;
+    height: 220px;
+    /* overflow-y: scroll; */
+    margin-bottom: 20px;
 }
 
 .abilities-container {
     width: 100%;
-    height: 350px;
+    height: 340px;
     overflow-y: scroll;
 }
+
+
+
+
+/*///////////////////////////////////////////*/
+
+
+
+
 
 /* Warpping display */
 .warp-circle {
@@ -615,4 +590,82 @@ hr {
 
 .z-ind-2 {
     z-index: 2;
+}
+
+
+.display-grid-1-1 {
+    display: grid;
+    grid-auto-columns: minmax(100px, auto);
+    grid-template-rows: 1fr;
+    gap: 0px;
+}
+
+.display-grid-1-2 {
+    display: grid;
+    grid-auto-columns: minmax(100px, auto);
+    grid-template-rows: 1fr 1fr;
+    gap: 10px;
+}
+
+.display-grid-1-special {
+    display: grid;
+    grid-auto-columns: minmax(100px, auto);
+    gap: 10px;
+    grid-template-rows: 70% 1fr;
+}
+
+.display-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    grid-auto-rows: minmax(100px, auto);
+}
+
+.display-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    grid-auto-rows: minmax(100px, auto);
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: minmax(10px, auto);
+}
+
+.grid-c-1-2 {
+    grid-column: 1 / 2;
+}
+
+.grid-c-1-3 {
+    grid-column: 1 / 3;
+}
+
+.grid-c-2-3 {
+    grid-column: 2 / 3;
+}
+
+.grid-c-3-4 {
+    grid-column: 3 / 4;
+}
+
+.grid-c-2-4 {
+    grid-column: 2 / 4; 
+}
+
+.grid-c-4-5 {
+    grid-column: 4 / 5;
+}
+
+.grid-r-1 {
+    grid-row: 1;
+}
+
+.grid-r-2 {
+    grid-row: 2;
+}
+
+.grid-r-3 {
+    grid-row: 3;
 }
